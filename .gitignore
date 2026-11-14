@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Éditeurs et système
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Données volumineuses ou générées (jamais versionnées : cf. consignes de remise)
+image_storage/*
+!image_storage/.gitkeep
+features/*
+!features/.gitkeep
+results*/
+
+# Base de données locale (propositions pour A)
+instance/
+*.db
+*.sqlite3
+
+# Configuration locale
+.env
