@@ -1,25 +1,23 @@
 # Galerie photos et recherche d'images par contenu (CBIR)
 
-Projet du Master IASD, **Groupe 4**. Application web de gestion d'une galerie de photos (Flask), avec recherche d'images par similarité visuelle : recherche simple, ou recherche avec **retour de pertinence** par la méthode **Re-weighting Type-1**.
+Projet du Master IASD, **Groupe 4**. Application web de gestion d'une galerie de photos, avec recherche d'images par similarité visuelle : recherche simple, ou recherche avec **retour de pertinence** par la méthode **Re-weighting Type-1**.
 
 Base d'images : [GHIM-10K](https://www.kaggle.com/datasets/mcpython/ghim-10k) (10 000 images, 20 catégories de 500 images).
 
 ## Équipe et état d'avancement
 
-| Membre | Responsabilité | Statut |
-|---|---|---|
-| A : *[nom]* | Galerie web : authentification, upload, téléchargement, suppression, hiérarchie de catégories, transformations d'images | **À compléter** |
-| B : *[nom]* | API de descripteurs (Flask-RESTful), extraction couleur et texture, affichage des descripteurs | **À compléter** |
-| C : *[nom]* | Recherche, retour de pertinence Type-1, évaluation | Implémenté et testé sur données synthétiques. À valider sur GHIM-10K dès que la matrice de B est livrée |
+- **EL MANSOURI AYA**
+- **EL RHORBA AYA**
+- **IBN IBRAHYM MERIEM**
 
 ## Fonctionnalités
 
-**Tâche 1 : galerie et descripteurs (A et B)**
+**Tâche 1 : galerie et descripteurs **
 - Authentification, upload, téléchargement et suppression d'images (une ou plusieurs).
 - Hiérarchie de catégories, création d'images par transformation (recadrage, changement d'échelle, etc.).
 - API REST (Flask, Flask-RESTful) qui calcule les descripteurs de couleur (histogramme, moments, couleurs dominantes) et de texture (matrice de co-occurrence GLCM, histogramme LBP), et affichage de ces descripteurs.
 
-**Tâche 2 : recherche d'images similaires (C)**
+**Tâche 2 : recherche d'images similaires **
 - Recherche simple : distance euclidienne entre le vecteur de l'image requête et ceux de la base.
 - Recherche avec retour de pertinence : l'utilisateur marque les images pertinentes, le système met à jour les poids des descripteurs et la requête, puis relance la recherche (Re-weighting Type-1).
 
@@ -28,9 +26,9 @@ Base d'images : [GHIM-10K](https://www.kaggle.com/datasets/mcpython/ghim-10k) (1
 ```
 Navigateur
    |
-Application web Flask (A) ---- blueprint /search et /feedback (C)
+Application web Flask  ---- blueprint /search et /feedback 
    |                                    |
-API de descripteurs (B)          moteur de recherche en mémoire
+API de descripteurs           moteur de recherche en mémoire
 (Flask-RESTful)                  (matrice des descripteurs, sessions)
    |                                    |
    +------------- features/ ------------+
@@ -65,7 +63,6 @@ CBIR_Project/
 └── README.md
 ```
 
-L'application de A (`app.py`, modèles, configuration Flask) et le code de B (API de descripteurs, `extract_features.py`) s'ajoutent à cette arborescence. `backend/cbir_config.py` est volontairement distinct d'un éventuel `backend/config.py` de l'application.
 
 ## Installation
 

@@ -1,7 +1,6 @@
 # Contrat de données B ↔ C et API C ↔ A (version 2)
 
 **Projet** : Galerie photos + CBIR, Groupe 4 (Re-weighting Type-1)
-**Statut** : accepté par B le ____ (à remplir). Tout changement est annoncé le jour même et ce fichier est mis à jour.
 
 ---
 
@@ -113,16 +112,6 @@ engine, normalizer = load_engine("features")   # lève ValueError / FileNotFound
 
 Contrôles : dimension 172, pas de NaN ni inf, mapping de la même taille que la matrice, `index` dans l'ordre, champs `index`, `image_id`, `category` présents.
 
-## 6. Points que B doit confirmer ou modifier
-
-- [ ] Dimension totale = 172 et ordre des blocs (section 2)
-- [ ] Histogramme HSV : 8 × 4 × 4 = 128 bins
-- [ ] Couleurs dominantes : K-means avec k = 3, triées par taille de cluster
-- [ ] GLCM : 16 niveaux de gris, distance 1, 4 angles, 4 propriétés
-- [ ] LBP : P = 8, R = 1, méthode uniforme (10 bins)
-- [ ] Taille de redimensionnement avant extraction (proposition : 128 px, à préciser)
-- [ ] Format de sortie : `.npy` + `image_mapping.json`, valeurs brutes
-- [ ] Date de livraison de la première matrice (même partielle, par exemple 500 images)
 
 ## 7. Intégration dans l'application de A
 
