@@ -16,6 +16,7 @@ def create_app():
     )
     app.config.from_object(Config)
 
+    # Crée les dossiers de stockage s'ils n'existent pas
     for folder in (app.config["UPLOAD_FOLDER"], app.config["TRANSFORMED_FOLDER"]):
         os.makedirs(folder, exist_ok=True)
 
@@ -26,11 +27,14 @@ def create_app():
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    register_search_api(app)
+    # Blueprints de A (authentification et pages principales)
+    from backend.routes.auth import auth_bp
+    from backend.routes.main import main_bp
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(main_bp)
 
-    @app.route("/")
-    def index():
-        return "VisualVault fonctionne"
+    # API de recherche de C (monte si le code de C et les features de B existent)
+    register_search_api(app)
 
     with app.app_context():
         db.create_all()
