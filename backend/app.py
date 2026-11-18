@@ -27,11 +27,13 @@ def create_app():
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    # Blueprints de A (authentification et pages principales)
+    # Blueprints de A (authentification, pages principales, galerie)
     from backend.routes.auth import auth_bp
     from backend.routes.main import main_bp
+    from backend.routes.gallery import gallery_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
+    app.register_blueprint(gallery_bp)
 
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)
