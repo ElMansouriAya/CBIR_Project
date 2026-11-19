@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Ma galerie{% endblock %}
+{% block content %}
+<h2 class="mb-3">Ma galerie</h2>
+
+<div class="card mb-4 shadow-sm">
+  <div class="card-body">
+    <form method="post" action="{{ url_for('gallery.upload') }}" enctype="multipart/form-data"
+          class="row g-2 align-items-center">
+      <div class="col-md-9">
+        <input type="file" name="images" class="form-control" accept="image/*" multiple required>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100">Uploader</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if images %}
+<form method="post" id="selection-form">
+  <div class="d-flex flex-wrap gap-2 mb-3 align-items-center">
+    <div class="form-check me-3">
+      <input class="form-check-input" type="checkbox" id="select-all">
+      <label class="form-check-label" for="select-all">Tout sélectionner</label>
+    </div>
+    <button class="btn btn-outline-secondary btn-sm"
+            formaction="{{ url_for('gallery.download_multiple') }}">Télécharger (zip)</button>
+    <button class="btn btn-outline-danger btn-sm"
+            formaction="{{ url_for('gallery.delete') }}"
+            onclick="return confirm('Supprimer les images sélectionnées ?')">Supprimer</button>
+    <span class="text-muted ms-auto">{{ images|length }} image(s)</span>
+  </div>
+
+  <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-3">
+    {% for img in images %}
+    <div class="col">
+      <div class="card h-100 shadow-sm">
+        <img src="{{ url_for('gallery.serve', image_id=img.id) }}"
+             class="card-img-top gallery-thumb" alt="{{ img.filename }}" loading="lazy">
+        <div class="card-body p-2">
+          <div class="form-check">
+            <input class="form-check-input img-check" type="checkbox" name="selected" value="{{ img.id }}">
+            <label class="form-check-label small text-truncate d-block" title="{{ img.filename }}">
+              {{ img.filename }}
+            </label>
+          </div>
+        </div>
+        <div class="card-footer p-1 text-center">
+          <a class="btn btn-sm btn-light" href="{{ url_for('gallery.download', image_id=img.id) }}">Télécharger</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</form>
+{% else %}
+<p class="text-muted">Aucune image pour l'instant. Uploadez-en ci-dessus.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const all = document.getElementById("select-all");
+  if (all) {
+    all.addEventListener("change", () =>
+      document.querySelectorAll(".img-check").forEach(c => c.checked = all.checked));
+  }
+</script>
+{% endblock %}
