@@ -27,8 +27,7 @@ def create_app():
     def load_user(user_id):
         return db.session.get(User, int(user_id))
 
-    # Versionnement automatique des fichiers statiques (anti-cache).
-    # L'URL change dès que le fichier est modifié : plus de ?v=N à gérer à la main.
+    # Versionnement automatique des fichiers statiques (anti-cache)
     @app.context_processor
     def asset_version():
         def asset_v(filename):
@@ -39,13 +38,15 @@ def create_app():
                 return 0
         return {"asset_v": asset_v}
 
-    # Blueprints de A (authentification, pages principales, galerie)
+    # Blueprints de A (authentification, pages, galerie, catégories)
     from backend.routes.auth import auth_bp
     from backend.routes.main import main_bp
     from backend.routes.gallery import gallery_bp
+    from backend.routes.categories import categories_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(gallery_bp)
+    app.register_blueprint(categories_bp)
 
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)

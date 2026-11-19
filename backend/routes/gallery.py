@@ -9,6 +9,8 @@ from werkzeug.utils import secure_filename
 from PIL import Image as PILImage
 from backend.extensions import db
 from backend.models import Image
+from backend.routes.categories import (user_categories, flat_categories,
+                                       descendant_ids, get_category_or_404)
 
 gallery_bp = Blueprint("gallery", __name__, url_prefix="/gallery")
 
@@ -40,17 +42,37 @@ def get_user_image_or_404(image_id):
 @gallery_bp.route("/")
 @login_required
 def index():
-    images = (Image.query.filter_by(user_id=current_user.id)
-              .order_by(Image.created_at.desc()).all())
-    return render_template("gallery.html", images=images)
+    cats = user_categories()
+    current = request.args.get("category", "")
+    query = Image.query.filter_by(user_id=current_user.id)
+    current_cat = None
+
+    if current == "none":                       # images sans catégorie
+        query = query.filter(Image.category_id.is_(None))
+    elif current.isdigit():                     # catégorie + ses sous-catégories
+        current_cat = get_category_or_404(int(current))
+        ids = descendant_ids(current_cat.id, cats) + [current_cat.id]
+        query = query.filter(Image.category_id.in_(ids))
+    else:
+        current = ""
+
+    images = query.order_by(Image.created_at.desc()).all()
+    return render_template("gallery.html", images=images,
+                           options=flat_categories(cats),
+                           current=current, current_cat=current_cat)
 
 
 @gallery_bp.route("/upload", methods=["POST"])
 @login_required
 def upload():
     files = request.files.getlist("images")
-    saved, rejected = 0, []
+    cat_id = request.form.get("category_id", type=int)
+    if cat_id:
+        get_category_or_404(cat_id)             # la catégorie doit être à l'utilisateur
+    else:
+        cat_id = None
 
+    saved, rejected = 0, []
     for f in files:
         if not f or not f.filename:
             continue
@@ -69,6 +91,7 @@ def upload():
             filename=original,
             filepath=os.path.join(str(current_user.id), stored_name),  # relatif à UPLOAD_FOLDER
             user_id=current_user.id,
+            category_id=cat_id,
         ))
         saved += 1
 
@@ -79,7 +102,7 @@ def upload():
         flash("Fichiers refusés : " + ", ".join(rejected), "warning")
     if not saved and not rejected:
         flash("Aucun fichier sélectionné.", "info")
-    return redirect(url_for("gallery.index"))
+    return redirect(url_for("gallery.index", category=cat_id))
 
 
 @gallery_bp.route("/file/<int:image_id>")
@@ -123,6 +146,7 @@ def download_multiple():
 def delete():
     """Supprime une ou plusieurs images (cases cochées)."""
     ids = request.form.getlist("selected", type=int)
+    back = request.form.get("current_filter", "")
     imgs = Image.query.filter(Image.id.in_(ids), Image.user_id == current_user.id).all()
 
     for img in imgs:
@@ -135,4 +159,4 @@ def delete():
 
     db.session.commit()
     flash(f"{len(imgs)} image(s) supprimée(s).", "success" if imgs else "info")
-    return redirect(url_for("gallery.index"))
+    return redirect(url_for("gallery.index", category=back or None))

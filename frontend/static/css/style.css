@@ -131,3 +131,15 @@ a:hover { color: var(--vv-primary-dark); }
 .tile-name { font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tile-overlay a { color: #fff; font-size: 1.05rem; }
 @media (hover: none) { .tile-check, .tile-overlay { opacity: 1; } }
+/* ===== Arbre de catégories ===== */
+.cat-tree, .cat-tree ul { list-style: none; margin: 0; padding: 0; }
+.cat-tree ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 2px solid var(--vv-border); }
+.cat-row { display: flex; align-items: center; gap: .6rem; padding: .5rem .6rem; border-radius: 10px; }
+.cat-row:hover { background: var(--vv-primary-soft); }
+.cat-row > i { color: var(--vv-primary); font-size: 1.1rem; }
+.cat-name { font-weight: 500; color: var(--vv-text); }
+.cat-name:hover { color: var(--vv-primary); }
+.cat-count { font-size: .72rem; background: var(--vv-primary-soft); color: var(--vv-primary); padding: 2px 8px; border-radius: 999px; }
+.cat-actions { margin-left: auto; display: flex; gap: .25rem; opacity: 0; transition: opacity .15s; }
+.cat-row:hover .cat-actions { opacity: 1; }
+@media (hover: none) { .cat-actions { opacity: 1; } }
