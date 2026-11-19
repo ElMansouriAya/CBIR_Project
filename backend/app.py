@@ -38,15 +38,17 @@ def create_app():
                 return 0
         return {"asset_v": asset_v}
 
-    # Blueprints de A (authentification, pages, galerie, catégories)
+    # Blueprints de A (auth, pages, galerie, catégories, transformations)
     from backend.routes.auth import auth_bp
     from backend.routes.main import main_bp
     from backend.routes.gallery import gallery_bp
     from backend.routes.categories import categories_bp
+    from backend.routes.transform import transform_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(gallery_bp)
     app.register_blueprint(categories_bp)
+    app.register_blueprint(transform_bp)
 
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)
