@@ -82,9 +82,14 @@
         <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
         <div class="tile-overlay">
           <span class="tile-name" title="{{ img.filename }}">{{ img.filename }}</span>
-          <a href="{{ url_for('gallery.download', image_id=img.id) }}" title="Télécharger">
-            <i class="bi bi-download"></i>
-          </a>
+          <span class="d-flex gap-2">
+            <a href="{{ url_for('transform.editor', image_id=img.id) }}" title="Transformer">
+              <i class="bi bi-crop"></i>
+            </a>
+            <a href="{{ url_for('gallery.download', image_id=img.id) }}" title="Télécharger">
+              <i class="bi bi-download"></i>
+            </a>
+          </span>
         </div>
       </div>
     </div>
@@ -115,26 +120,38 @@
     upBtn.disabled = !n;
   }
   input.addEventListener("change", updateFiles);
-  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("drag"); }));
-  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("drag"); }));
-  dz.addEventListener("drop", e => { input.files = e.dataTransfer.files; updateFiles(); });
+  ["dragenter", "dragover"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("drag"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("drag"); });
+  });
+  dz.addEventListener("drop", function (e) {
+    input.files = e.dataTransfer.files;
+    updateFiles();
+  });
 
   // --- Sélection multiple ---
   const all = document.getElementById("select-all");
   if (all) {
-    const checks = [...document.querySelectorAll(".tile-check")];
-    const actions = [...document.querySelectorAll(".needs-selection")];
+    const checks = Array.from(document.querySelectorAll(".tile-check"));
+    const actions = Array.from(document.querySelectorAll(".needs-selection"));
     const count = document.getElementById("sel-count");
 
     function refresh() {
-      const n = checks.filter(c => c.checked).length;
+      const n = checks.filter(function (c) { return c.checked; }).length;
       count.textContent = n ? n + " sélectionnée(s)" : "";
-      actions.forEach(b => b.disabled = !n);
-      checks.forEach(c => c.closest(".tile").classList.toggle("selected", c.checked));
+      actions.forEach(function (b) { b.disabled = !n; });
+      checks.forEach(function (c) {
+        c.closest(".tile").classList.toggle("selected", c.checked);
+      });
       all.checked = n > 0 && n === checks.length;
     }
-    checks.forEach(c => c.addEventListener("change", refresh));
-    all.addEventListener("change", () => { checks.forEach(c => c.checked = all.checked); refresh(); });
+    checks.forEach(function (c) { c.addEventListener("change", refresh); });
+    all.addEventListener("change", function () {
+      checks.forEach(function (c) { c.checked = all.checked; });
+      refresh();
+    });
   }
 </script>
 {% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Transformations · VisualVault{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Transformations</h1>
+    <p class="page-sub">Choisissez une image à recadrer, redimensionner, pivoter ou retourner.</p>
+  </div>
+</div>
+
+{% if images %}
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+  {% for img in images %}
+  <div class="col">
+    <a class="tile d-block" href="{{ url_for('transform.editor', image_id=img.id) }}">
+      <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
+      <div class="tile-overlay">
+        <span class="tile-name">{{ img.filename }}</span>
+        <i class="bi bi-crop"></i>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card-soft empty-state">
+  <i class="bi bi-crop"></i>
+  <h5>Aucune image à transformer</h5>
+  <p class="mb-0">Ajoutez d'abord des images dans la <a href="{{ url_for('gallery.index') }}">galerie</a>.</p>
+</div>
+{% endif %}
+{% endblock %}
