@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Catégories · VisualVault{% endblock %}
+
+{% macro render_nodes(nodes) %}
+<ul>
+  {% for n in nodes %}
+  <li>
+    <div class="cat-row">
+      <i class="bi {{ 'bi-folder2-open' if n.children else 'bi-folder2' }}"></i>
+      <a class="cat-name" href="{{ url_for('gallery.index', category=n.cat.id) }}">{{ n.cat.name }}</a>
+      <span class="cat-count">{{ n.count }}</span>
+      <div class="cat-actions">
+        <button type="button" class="btn btn-sm btn-light btn-add-sub" data-parent="{{ n.cat.id }}" title="Ajouter une sous-catégorie">
+          <i class="bi bi-folder-plus"></i>
+        </button>
+        <button type="button" class="btn btn-sm btn-light btn-rename"
+                data-url="{{ url_for('categories.rename', cat_id=n.cat.id) }}"
+                data-name="{{ n.cat.name }}" title="Renommer">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <form method="post" action="{{ url_for('categories.delete', cat_id=n.cat.id) }}"
+              onsubmit="return confirm('Supprimer « {{ n.cat.name }} » et ses sous-catégories ? Les images seront conservées.')">
+          <button class="btn btn-sm btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+        </form>
+      </div>
+    </div>
+    {% if n.children %}{{ render_nodes(n.children) }}{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Catégories</h1>
+    <p class="page-sub">Organisez vos images en hiérarchie (jusqu'à {{ max_depth }} niveaux).</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <form method="post" action="{{ url_for('categories.create') }}" class="card-soft">
+      <h6 class="mb-3">Nouvelle catégorie</h6>
+      <div class="mb-3">
+        <label class="form-label">Nom</label>
+        <input type="text" name="name" id="cat-name" class="form-control" maxlength="100" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Catégorie parente</label>
+        <select name="parent_id" id="cat-parent" class="form-select">
+          <option value="">— Aucune (niveau racine) —</option>
+          {% for c, depth in options %}
+          <option value="{{ c.id }}">{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>Créer</button>
+    </form>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="card-soft">
+      {% if tree %}
+      <ul class="cat-tree">
+        <li>
+          <div class="cat-row">
+            <i class="bi bi-inbox"></i>
+            <a class="cat-name" href="{{ url_for('gallery.index', category='none') }}">Sans catégorie</a>
+            <span class="cat-count">{{ uncategorized }}</span>
+          </div>
+        </li>
+      </ul>
+      <div class="cat-tree">{{ render_nodes(tree) }}</div>
+      {% else %}
+      <div class="empty-state">
+        <i class="bi bi-folder2-open"></i>
+        <h5>Aucune catégorie</h5>
+        <p class="mb-0">Créez-en une avec le formulaire.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Fenêtre de renommage -->
+<div class="modal fade" id="renameModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <form method="post" id="rename-form" class="modal-content">
+      <div class="modal-header"><h6 class="modal-title">Renommer la catégorie</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <input type="text" name="name" id="rename-input" class="form-control" maxlength="100" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Annuler</button>
+        <button class="btn btn-primary">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // « + » : présélectionne le parent dans le formulaire de création
+  document.querySelectorAll(".btn-add-sub").forEach(b => b.addEventListener("click", () => {
+    document.getElementById("cat-parent").value = b.dataset.parent;
+    const n = document.getElementById("cat-name");
+    n.scrollIntoView({behavior: "smooth", block: "center"});
+    n.focus();
+  }));
+
+  // Renommer : ouvre la fenêtre avec le nom actuel
+  const modalEl = document.getElementById("renameModal");
+  const modal = new bootstrap.Modal(modalEl);
+  document.querySelectorAll(".btn-rename").forEach(b => b.addEventListener("click", () => {
+    document.getElementById("rename-form").action = b.dataset.url;
+    document.getElementById("rename-input").value = b.dataset.name;
+    modal.show();
+  }));
+  modalEl.addEventListener("shown.bs.modal", () => document.getElementById("rename-input").select());
+</script>
+{% endblock %}

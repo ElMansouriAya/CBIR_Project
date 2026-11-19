@@ -50,7 +50,9 @@
       <span class="side-link disabled"><i class="bi bi-crop"></i> Transformations <em class="soon">Bientôt</em></span>
 
       <div class="side-label">Analyse CBIR</div>
-      <span class="side-link disabled"><i class="bi bi-bar-chart"></i> Descripteurs <em class="soon">Bientôt</em></span>
+            <a class="side-link {{ 'active' if ep.startswith('categories.') }}" href="{{ url_for('categories.index') }}">
+        <i class="bi bi-folder2-open"></i> Catégories
+      </a>
       <span class="side-link disabled"><i class="bi bi-search"></i> Recherche <em class="soon">Bientôt</em></span>
     </nav>
 
