@@ -210,3 +210,53 @@ def generer_validation(
         )
     chemin_npy, chemin_json = _ecrire_sorties_atomiquement(matrice, selection, Path(dossier_sortie))
     return matrice, selection, chemin_npy, chemin_json
+
+
+def valider_mapping_complet(mapping: Sequence[dict[str, Any]]) -> None:
+    """Valide le mapping global attendu pour le jeu GHIM-10K."""
+    if len(mapping) != 10000:
+        raise MappingError(f"Le mapping complet doit contenir 10 000 images; {len(mapping)} trouvées.")
+    requis = {"index", "image_id", "filename", "category", "path"}
+    for position, entree in enumerate(mapping):
+        if not requis.issubset(entree):
+            raise MappingError(f"Entrée {position}: champs obligatoires absents.")
+        if entree["index"] != position or entree["image_id"] != position + 1:
+            raise MappingError(f"Entrée {position}: index/image_id incompatible avec la position.")
+    clefs = [(e["category"].casefold(), e["category"], e["filename"].casefold(), e["filename"])
+             for e in mapping]
+    if clefs != sorted(clefs):
+        raise MappingError("Le mapping complet doit être trié par catégorie puis nom de fichier.")
+
+
+def generer_complet(
+    chemin_mapping: str | Path,
+    dossier_image_storage: str | Path,
+    chemin_sortie: str | Path,
+    preprocessing_mode: str = PREPROCESSING_LETTERBOX,
+) -> tuple[np.ndarray, list[dict[str, Any]], Path]:
+    """Extrait le mapping complet puis publie un .npy vérifié sans écrasement."""
+    mapping = lire_mapping(chemin_mapping)
+    valider_mapping_complet(mapping)
+    sortie = Path(chemin_sortie)
+    sortie.parent.mkdir(parents=True, exist_ok=True)
+    if sortie.exists():
+        raise FileExistsError(f"La sortie existe déjà, refus de l'écraser : {sortie}")
+
+    fd, temporaire_nom = tempfile.mkstemp(prefix=f".{sortie.name}.staging-", suffix=".npy", dir=sortie.parent)
+    os.close(fd)
+    temporaire = Path(temporaire_nom)
+    try:
+        matrice = extraire_entrees(mapping, dossier_image_storage, preprocessing_mode)
+        if matrice.shape != (10000, N_DIMS) or matrice.dtype != np.float32 or not np.isfinite(matrice).all():
+            raise ValueError("Matrice complète invalide: forme (10000, 172), float32 et valeurs finies attendus.")
+        with temporaire.open("wb") as fichier:
+            np.save(fichier, matrice, allow_pickle=False)
+        # Relecture de l'artefact préparé avant publication.
+        verifiee = np.load(temporaire, allow_pickle=False)
+        if verifiee.shape != (10000, N_DIMS) or verifiee.dtype != np.float32 or not np.isfinite(verifiee).all():
+            raise ValueError("Le fichier temporaire ne passe pas la vérification finale.")
+        # Lien dur atomique: échoue si la destination a été créée entre-temps.
+        os.link(temporaire, sortie)
+        return matrice, mapping, sortie
+    finally:
+        temporaire.unlink(missing_ok=True)

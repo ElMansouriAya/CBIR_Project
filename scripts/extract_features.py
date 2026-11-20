@@ -11,12 +11,14 @@ if str(RACINE_PROJET) not in sys.path:
     sys.path.insert(0, str(RACINE_PROJET))
 
 from feature_extraction.config import PREPROCESSING_LETTERBOX, PREPROCESSING_MODES, PREPROCESSING_STRETCH
-from feature_extraction.pipeline import ImageExtractionError, MappingError, generer_validation
+from feature_extraction.pipeline import ImageExtractionError, MappingError, generer_complet, generer_validation
 
 
 def main() -> int:
     """Point d'entrée de la première extraction, limitée à 25 images/catégorie."""
     parseur = argparse.ArgumentParser(description=__doc__)
+    parseur.add_argument("--mode", choices=("validation", "full"), default="validation",
+                         help="validation extrait 500 images; full extrait les 10 000 images.")
     parseur.add_argument(
         "--mapping", type=Path, default=RACINE_PROJET / "features" / "image_mapping.json",
         help="Mapping complet servant de source d'ordre.",
@@ -39,13 +41,21 @@ def main() -> int:
         nom_dossier = "validation_stretched" if args.preprocessing_mode == PREPROCESSING_STRETCH else "validation"
         dossier_sortie = RACINE_PROJET / "features" / nom_dossier
     try:
-        matrice, mapping, chemin_npy, chemin_json = generer_validation(
-            args.mapping,
-            args.image_storage,
-            dossier_sortie,
-            images_par_categorie=25,
-            preprocessing_mode=args.preprocessing_mode,
-        )
+        if args.mode == "full":
+            chemin_final = RACINE_PROJET / "features" / "descriptors_raw.npy"
+            matrice, mapping, chemin_npy = generer_complet(
+                args.mapping, args.image_storage, chemin_final,
+                preprocessing_mode=args.preprocessing_mode,
+            )
+            chemin_json = args.mapping
+        else:
+            matrice, mapping, chemin_npy, chemin_json = generer_validation(
+                args.mapping,
+                args.image_storage,
+                dossier_sortie,
+                images_par_categorie=25,
+                preprocessing_mode=args.preprocessing_mode,
+            )
     except (MappingError, ImageExtractionError, OSError, ValueError) as erreur:
         parseur.error(str(erreur))
 
@@ -53,7 +63,8 @@ def main() -> int:
     print(f"Matrice : {chemin_npy}")
     print(f"Mapping : {chemin_json}")
     print(f"Mode de prétraitement : {args.preprocessing_mode}")
-    print("Les index du mapping de validation sont locaux; les image_id restent globaux.")
+    if args.mode == "validation":
+        print("Les index du mapping de validation sont locaux; les image_id restent globaux.")
     return 0
 
 
