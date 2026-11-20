@@ -55,6 +55,9 @@
       </a>
 
       <div class="side-label">Analyse CBIR</div>
+      <a class="side-link {{ 'active' if ep.startswith('dataset.') }}" href="{{ url_for('dataset.index') }}"{% if ep == 'dataset.index' %} aria-current="page"{% endif %}>
+        <i class="bi bi-collection"></i> Bibliothèque GHIM
+      </a>
       <span class="side-link disabled"><i class="bi bi-bar-chart"></i> Descripteurs <em class="soon">Bientôt</em></span>
       <span class="side-link disabled"><i class="bi bi-search"></i> Recherche <em class="soon">Bientôt</em></span>
     </nav>

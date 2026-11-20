@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Bibliothèque GHIM · VisualVault{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Bibliothèque GHIM</h1>
+    <p class="page-sub">{{ pagination.total }} image{{ 's' if pagination.total > 1 }}</p>
+  </div>
+  {% if categories %}
+  <form method="get" action="{{ url_for('dataset.index') }}" class="d-flex align-items-center gap-2 flex-wrap">
+    <label class="text-muted small" for="dataset-category">Catégorie</label>
+    <select name="category" id="dataset-category" class="form-select form-select-sm w-auto">
+      <option value="">Toutes les catégories</option>
+      {% if category and category not in categories %}
+      <option value="{{ category }}" selected>{{ category }}</option>
+      {% endif %}
+      {% for name in categories %}
+      <option value="{{ name }}"{% if category == name %} selected{% endif %}>{{ name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-outline-primary btn-sm">Filtrer</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if pagination.items %}
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+  {% for image in pagination.items %}
+  {% set image_url = url_for('dataset.serve', image_id=image.id) %}
+  <div class="col">
+    <figure class="card-soft p-2 mb-0 h-100">
+      <a class="d-block tile bg-light shadow-none" href="{{ image_url }}">
+        <img class="object-fit-contain" src="{{ image_url }}" alt="{{ image.filename }}" loading="lazy">
+      </a>
+      <figcaption class="px-1 pt-2">
+        <div class="small fw-semibold text-truncate" title="{{ image.filename }}">{{ image.filename }}</div>
+        <div class="small text-muted text-truncate">{{ image.dataset_category }}</div>
+      </figcaption>
+    </figure>
+  </div>
+  {% endfor %}
+</div>
+
+{% if pagination.pages > 1 %}
+<nav class="mt-4" aria-label="Pages de la bibliothèque">
+  <ul class="pagination pagination-sm flex-wrap justify-content-center">
+    {% if pagination.has_prev %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=pagination.prev_num) }}">Précédente</a>
+    </li>
+    {% endif %}
+    {% for number in pagination.iter_pages() %}
+    {% if number == pagination.page %}
+    <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
+    {% elif number %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=number) }}">{{ number }}</a>
+    </li>
+    {% else %}
+    <li class="page-item disabled"><span class="page-link">…</span></li>
+    {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <li class="page-item">
+      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=pagination.next_num) }}">Suivante</a>
+    </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+{% else %}
+<div class="card-soft empty-state">
+  <i class="bi bi-collection" aria-hidden="true"></i>
+  {% if categories and category %}
+  <h2 class="h5 mt-3">Aucune image dans cette catégorie</h2>
+  <a href="{{ url_for('dataset.index') }}">Voir toutes les images</a>
+  {% else %}
+  <h2 class="h5 mt-3">La bibliothèque GHIM est vide</h2>
+  <p class="mb-0">Les images de référence apparaîtront après l’import du dataset.</p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

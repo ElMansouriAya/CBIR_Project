@@ -78,6 +78,29 @@ Téléchargez GHIM-10K depuis Kaggle et placez les images dans `image_storage/da
 
 ## Utilisation
 
+### Module A — Bibliothèque GHIM
+
+Depuis la racine du dépôt, placez le mapping dans `features/image_mapping.json` et les JPEG dans `image_storage/dataset/` en suivant les chemins du mapping.
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.import_dataset
+.\.venv\Scripts\python.exe -m flask --app backend.app run
+```
+
+Connectez-vous, puis ouvrez **Bibliothèque GHIM** dans le menu ou accédez à `http://127.0.0.1:5000/dataset/`.
+L’import conserve les `image_id` du mapping, accepte une relance avec le même lot et refuse les collisions avec les images existantes.
+
+Pour le lot de validation `validation_stretched`, utilisez une base SQLite dédiée. Dans une session PowerShell distincte, indiquez le chemin vers le dossier extrait et importez le mapping avec les mêmes commandes.
+
+```powershell
+$env:DATABASE_URL = "sqlite:///" + (Join-Path $env:TEMP "visualvault-validation-stretched.db").Replace('\', '/')
+$env:FEATURES_FOLDER = "C:/chemin/vers/validation_stretched"
+.\.venv\Scripts\python.exe -m scripts.import_dataset
+.\.venv\Scripts\python.exe -m flask --app backend.app run
+```
+
+Si les JPEG sont ailleurs, définissez `DATASET_FOLDER` sur le dossier qui contient les sous-dossiers des catégories, par exemple `C:/donnees/ghim/dataset`. L’option `--mapping` permet aussi de sélectionner un fichier en particulier. L’import de la bibliothèque fonctionne avec le mapping et les JPEG seuls.
+
 ### Module C : recherche, retour de pertinence, évaluation
 
 **Tests**
@@ -124,9 +147,9 @@ Déposer `features/descriptors_raw.npy` (matrice N x 172, valeurs brutes) et `fe
 python -c "from backend.services.loader import load_engine; load_engine('features'); print('Contrat respecté')"
 ```
 
-### Module A et module B
+### Module B
 
-**À compléter** : commandes de lancement de l'application web, de l'API de descripteurs et du script d'extraction.
+**À compléter** : commandes de lancement de l'API de descripteurs et du script d'extraction.
 
 ## Vecteur de descripteurs
 
