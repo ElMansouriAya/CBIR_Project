@@ -131,6 +131,7 @@ a:hover { color: var(--vv-primary-dark); }
 .tile-name { font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tile-overlay a { color: #fff; font-size: 1.05rem; }
 @media (hover: none) { .tile-check, .tile-overlay { opacity: 1; } }
+.similarity-card:has(input:checked) { border-color: var(--vv-primary); }
 /* ===== Arbre de catégories ===== */
 .cat-tree, .cat-tree ul { list-style: none; margin: 0; padding: 0; }
 .cat-tree ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 2px solid var(--vv-border); }
