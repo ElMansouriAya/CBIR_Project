@@ -54,6 +54,9 @@ def create_app():
     app.register_blueprint(dataset_bp)
     app.register_blueprint(similarity_bp)
 
+    from backend.services.descriptors import load_descriptor_catalog
+    app.extensions["ghim_descriptors"] = load_descriptor_catalog(app.config["FEATURES_FOLDER"])
+
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)
 

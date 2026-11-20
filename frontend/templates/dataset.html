@@ -38,6 +38,8 @@
       </figcaption>
       <a class="btn btn-outline-primary btn-sm w-100 mt-2"
          href="{{ url_for('similarity.index', image_id=image.id) }}">Trouver des images similaires</a>
+      <a class="btn btn-outline-secondary btn-sm w-100 mt-2"
+         href="{{ url_for('dataset.descriptors', image_id=image.id) }}">Voir les descripteurs</a>
     </figure>
   </div>
   {% endfor %}

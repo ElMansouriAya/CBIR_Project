@@ -116,6 +116,12 @@ Pour vérifier le lot et le parcours sur SQLite isolé, lancez depuis la racine 
 
 `features/validation_stretched` doit contenir `descriptors_raw.npy` et `image_mapping.json` issus de la même livraison. Les tests de recherche génèrent leurs propres JPEG et vecteurs.
 
+### Module A — Descripteurs d’une image GHIM
+
+Dans la bibliothèque, cliquez sur **Voir les descripteurs**. L’application lit les cinq blocs du vecteur brut du lot chargé au démarrage. Le lot doit associer l’ID, le nom, la catégorie et le chemin de la même image GHIM. Si aucun vecteur exploitable ne correspond, la fiche affiche un message d’indisponibilité. Après installation d’un nouveau lot dans `FEATURES_FOLDER`, redémarrez Flask.
+
+L’API HTTP de M2 sera raccordée quand son blueprint et le format effectif de ses réponses seront disponibles. Les tests de la fiche utilisent des JPEG et des vecteurs de démonstration dans une base SQLite isolée.
+
 ### Module C : recherche, retour de pertinence, évaluation
 
 **Tests**
