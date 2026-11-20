@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Ma galerie · VisualVault{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Ma galerie</h1>
+    <p class="page-sub">
+      {{ images|length }} image(s)
+      {% if current == 'none' %}· sans catégorie
+      {% elif current_cat %}· « {{ current_cat.name }} » (sous-catégories incluses){% endif %}
+    </p>
+  </div>
+  <form method="get" class="d-flex align-items-center gap-2">
+    <label class="text-muted small mb-0" for="filter-cat">Filtrer :</label>
+    <select name="category" id="filter-cat" class="form-select form-select-sm" onchange="this.form.submit()">
+      <option value="">Toutes les images</option>
+      <option value="none" {{ 'selected' if current == 'none' }}>Sans catégorie</option>
+      {% for c, depth in options %}
+      <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+
+<form method="post" action="{{ url_for('gallery.upload') }}" enctype="multipart/form-data" class="card-soft mb-4">
+  <label class="dropzone" id="dropzone" for="file-input">
+    <i class="bi bi-cloud-arrow-up"></i>
+    <div class="dz-title">Glissez vos images ici ou <span>parcourez</span></div>
+    <div class="dz-sub" id="dz-sub">JPG, PNG, GIF, WEBP · sélection multiple possible</div>
+    <input id="file-input" type="file" name="images" accept="image/*" multiple hidden>
+  </label>
+  <div class="d-flex justify-content-end align-items-center gap-2 mt-3 flex-wrap">
+    <select name="category_id" class="form-select form-select-sm w-auto">
+      <option value="">Sans catégorie</option>
+      {% for c, depth in options %}
+      <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-primary" id="upload-btn" disabled><i class="bi bi-upload me-1"></i>Uploader</button>
+  </div>
+</form>
+
+{% if images %}
+<form method="post">
+  <input type="hidden" name="current_filter" value="{{ current }}">
+  <div class="toolbar">
+    <div class="form-check mb-0">
+      <input class="form-check-input" type="checkbox" id="select-all">
+      <label class="form-check-label" for="select-all">Tout sélectionner</label>
+    </div>
+    <span class="text-muted small" id="sel-count"></span>
+    <div class="ms-auto d-flex gap-2 flex-wrap">
+      <div class="input-group input-group-sm w-auto">
+        <select name="category_id" class="form-select form-select-sm">
+          <option value="none">Sans catégorie</option>
+          {% for c, depth in options %}
+          <option value="{{ c.id }}">{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-outline-primary needs-selection" disabled
+                formaction="{{ url_for('categories.assign') }}">
+          <i class="bi bi-folder-symlink me-1"></i>Déplacer
+        </button>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm needs-selection" disabled
+              formaction="{{ url_for('gallery.download_multiple') }}">
+        <i class="bi bi-file-zip me-1"></i>Télécharger (zip)
+      </button>
+      <button class="btn btn-outline-danger btn-sm needs-selection" disabled
+              formaction="{{ url_for('gallery.delete') }}"
+              onclick="return confirm('Supprimer les images sélectionnées ?')">
+        <i class="bi bi-trash me-1"></i>Supprimer
+      </button>
+    </div>
+  </div>
+
+  <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+    {% for img in images %}
+    <div class="col">
+      <div class="tile">
+        <input class="tile-check" type="checkbox" name="selected" value="{{ img.id }}">
+        <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
+        <div class="tile-overlay">
+          <span class="tile-name" title="{{ img.filename }}">{{ img.filename }}</span>
+          <span class="d-flex gap-2">
+            <a href="{{ url_for('transform.editor', image_id=img.id) }}" title="Transformer">
+              <i class="bi bi-crop"></i>
+            </a>
+            <a href="{{ url_for('gallery.download', image_id=img.id) }}" title="Télécharger">
+              <i class="bi bi-download"></i>
+            </a>
+          </span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</form>
+{% else %}
+<div class="card-soft empty-state">
+  <i class="bi bi-images"></i>
+  <h5>Aucune image ici</h5>
+  <p class="mb-0">Ajoutez des images avec la zone ci-dessus.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // --- Zone d'upload : glisser-déposer + compteur de fichiers ---
+  const input = document.getElementById("file-input");
+  const dz = document.getElementById("dropzone");
+  const sub = document.getElementById("dz-sub");
+  const upBtn = document.getElementById("upload-btn");
+  const defaultText = sub.textContent;
+
+  function updateFiles() {
+    const n = input.files.length;
+    sub.textContent = n ? n + " fichier(s) prêt(s) à être envoyé(s)" : defaultText;
+    upBtn.disabled = !n;
+  }
+  input.addEventListener("change", updateFiles);
+  ["dragenter", "dragover"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("drag"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("drag"); });
+  });
+  dz.addEventListener("drop", function (e) {
+    input.files = e.dataTransfer.files;
+    updateFiles();
+  });
+
+  // --- Sélection multiple ---
+  const all = document.getElementById("select-all");
+  if (all) {
+    const checks = Array.from(document.querySelectorAll(".tile-check"));
+    const actions = Array.from(document.querySelectorAll(".needs-selection"));
+    const count = document.getElementById("sel-count");
+
+    function refresh() {
+      const n = checks.filter(function (c) { return c.checked; }).length;
+      count.textContent = n ? n + " sélectionnée(s)" : "";
+      actions.forEach(function (b) { b.disabled = !n; });
+      checks.forEach(function (c) {
+        c.closest(".tile").classList.toggle("selected", c.checked);
+      });
+      all.checked = n > 0 && n === checks.length;
+    }
+    checks.forEach(function (c) { c.addEventListener("change", refresh); });
+    all.addEventListener("change", function () {
+      checks.forEach(function (c) { c.checked = all.checked; });
+      refresh();
+    });
+  }
+</script>
+{% endblock %}

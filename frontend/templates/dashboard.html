@@ -1,6 +1,49 @@
 {% extends "base.html" %}
-{% block title %}Dashboard{% endblock %}
+{% block title %}Tableau de bord · VisualVault{% endblock %}
 {% block content %}
-<h2>Bienvenue, {{ current_user.username }}</h2>
-<p class="text-muted">La galerie, les catégories et la recherche seront ajoutées ici.</p>
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Bonjour, {{ current_user.username }}</h1>
+    <p class="page-sub">Voici un aperçu de votre galerie.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('gallery.index') }}">
+    <i class="bi bi-upload me-1"></i>Ajouter des images
+  </a>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <a href="{{ url_for('gallery.index') }}" class="text-decoration-none">
+      <div class="card-soft stat-card">
+        <div class="stat-icon"><i class="bi bi-image"></i></div>
+        <div>
+          <div class="stat-value">{{ n_images }}</div>
+          <div class="stat-label">Images</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4">
+    <a href="{{ url_for('categories.index') }}" class="text-decoration-none">
+      <div class="card-soft stat-card">
+        <div class="stat-icon"><i class="bi bi-folder2-open"></i></div>
+        <div>
+          <div class="stat-value">{{ n_categories }}</div>
+          <div class="stat-label">Catégories</div>
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card-soft stat-card">
+      <div class="stat-icon"><i class="bi bi-search"></i></div>
+      <div>
+        <div class="stat-value">0</div>
+        <div class="stat-label">Recherches</div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

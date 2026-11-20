@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+{% block title %}Éditeur · VisualVault{% endblock %}
+
+{% block head %}
+<link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">{{ img.filename }}</h1>
+    <p class="page-sub">
+      {{ width }} × {{ height }} px
+      {% if parent %}· dérivée de
+        <a href="{{ url_for('transform.editor', image_id=parent.id) }}">{{ parent.filename }}</a>
+      {% endif %}
+    </p>
+  </div>
+  <a class="btn btn-light" href="{{ url_for('transform.index') }}"><i class="bi bi-arrow-left me-1"></i>Autres images</a>
+</div>
+
+<div class="row g-4">
+  <!-- Zone image -->
+  <div class="col-lg-8">
+    <div class="card-soft">
+      <div class="crop-stage">
+        <img id="crop-img" src="{{ url_for('gallery.serve', image_id=img.id) }}"
+             alt="{{ img.filename }}" data-w="{{ width }}" data-h="{{ height }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Outils -->
+  <div class="col-lg-4">
+    <div class="card-soft">
+      <ul class="nav nav-pills nav-fill mb-3" id="tools" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#t-crop" type="button" title="Recadrer"><i class="bi bi-crop"></i></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-resize" type="button" title="Redimensionner"><i class="bi bi-arrows-angle-expand"></i></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-rotate" type="button" title="Rotation"><i class="bi bi-arrow-clockwise"></i></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-flip" type="button" title="Symétrie"><i class="bi bi-symmetry-vertical"></i></button></li>
+      </ul>
+
+      <div class="tab-content">
+        <!-- Recadrer -->
+        <div class="tab-pane fade show active" id="t-crop">
+          <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
+            <input type="hidden" name="operation" value="crop">
+            <input type="hidden" name="x" id="f-x">
+            <input type="hidden" name="y" id="f-y">
+            <input type="hidden" name="width" id="f-w">
+            <input type="hidden" name="height" id="f-h">
+            <h6>Recadrer</h6>
+            <p class="text-muted small">Ajustez la zone sur l'image. Zone : <strong id="crop-info">—</strong></p>
+            <div class="btn-group btn-group-sm w-100 mb-3" id="ratios">
+              <button type="button" class="btn btn-outline-secondary active" data-r="NaN">Libre</button>
+              <button type="button" class="btn btn-outline-secondary" data-r="1">1:1</button>
+              <button type="button" class="btn btn-outline-secondary" data-r="1.3333333">4:3</button>
+              <button type="button" class="btn btn-outline-secondary" data-r="1.7777778">16:9</button>
+            </div>
+            <button class="btn btn-primary w-100"><i class="bi bi-scissors me-1"></i>Créer l'image recadrée</button>
+          </form>
+        </div>
+
+        <!-- Redimensionner -->
+        <div class="tab-pane fade" id="t-resize">
+          <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
+            <input type="hidden" name="operation" value="resize">
+            <h6>Redimensionner</h6>
+            <div class="form-check form-check-inline">
+              <input class="form-check-input" type="radio" name="mode" id="m-px" value="pixels" checked>
+              <label class="form-check-label" for="m-px">En pixels</label>
+            </div>
+            <div class="form-check form-check-inline mb-3">
+              <input class="form-check-input" type="radio" name="mode" id="m-pc" value="percent">
+              <label class="form-check-label" for="m-pc">En %</label>
+            </div>
+
+            <div id="box-px">
+              <div class="row g-2 mb-2">
+                <div class="col">
+                  <label class="form-label small">Largeur</label>
+                  <input type="number" min="1" max="8000" name="new_width" id="r-w" class="form-control" value="{{ width }}">
+                </div>
+                <div class="col">
+                  <label class="form-label small">Hauteur</label>
+                  <input type="number" min="1" max="8000" name="new_height" id="r-h" class="form-control" value="{{ height }}">
+                </div>
+              </div>
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="keep" checked>
+                <label class="form-check-label small" for="keep">Conserver les proportions</label>
+              </div>
+            </div>
+            <div id="box-pc" class="mb-3 d-none">
+              <label class="form-label small">Pourcentage</label>
+              <input type="number" min="1" max="500" step="1" name="percent" id="r-p" class="form-control" value="50">
+            </div>
+            <button class="btn btn-primary w-100"><i class="bi bi-arrows-angle-contract me-1"></i>Créer l'image redimensionnée</button>
+          </form>
+        </div>
+
+        <!-- Rotation -->
+        <div class="tab-pane fade" id="t-rotate">
+          <h6>Rotation</h6>
+          <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}" class="mb-3">
+            <input type="hidden" name="operation" value="rotate">
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-secondary" name="angle" value="-90"><i class="bi bi-arrow-counterclockwise me-1"></i>90° à gauche</button>
+              <button class="btn btn-outline-secondary" name="angle" value="90"><i class="bi bi-arrow-clockwise me-1"></i>90° à droite</button>
+              <button class="btn btn-outline-secondary" name="angle" value="180">180°</button>
+            </div>
+          </form>
+          <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
+            <input type="hidden" name="operation" value="rotate">
+            <label class="form-label small">Angle libre (degrés, sens horaire)</label>
+            <div class="input-group">
+              <input type="number" name="angle" step="any" min="-360" max="360" class="form-control" value="15" required>
+              <button class="btn btn-primary">Appliquer</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Symétrie -->
+        <div class="tab-pane fade" id="t-flip">
+          <h6>Symétrie</h6>
+          <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}" class="d-grid gap-2">
+            <input type="hidden" name="operation" value="flip">
+            <button class="btn btn-outline-secondary" name="direction" value="h"><i class="bi bi-symmetry-vertical me-1"></i>Horizontale (miroir)</button>
+            <button class="btn btn-outline-secondary" name="direction" value="v"><i class="bi bi-symmetry-horizontal me-1"></i>Verticale</button>
+          </form>
+        </div>
+      </div>
+
+      <hr>
+      <p class="small text-muted mb-0">
+        <i class="bi bi-info-circle me-1"></i>Chaque action crée une <strong>nouvelle image</strong> ; l'original n'est jamais modifié.
+      </p>
+    </div>
+
+    {% if versions %}
+    <div class="card-soft mt-3">
+      <h6 class="mb-3">Versions créées ({{ versions|length }})</h6>
+      <div class="version-grid">
+        {% for v in versions %}
+        <a href="{{ url_for('transform.editor', image_id=v.id) }}" title="{{ v.filename }}">
+          <img src="{{ url_for('gallery.serve', image_id=v.id) }}" alt="{{ v.filename }}" loading="lazy">
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+  const img = document.getElementById("crop-img");
+  const NAT_W = parseInt(img.dataset.w, 10);
+  const NAT_H = parseInt(img.dataset.h, 10);
+  const info = document.getElementById("crop-info");
+  let cropper = null;
+
+  // --- Recadrage ---
+  function initCropper() {
+    if (cropper) return;
+    cropper = new Cropper(img, {
+      viewMode: 1,
+      autoCropArea: 0.8,
+      responsive: true,
+      crop: function (e) {
+        // Coordonnées en pixels de l'image d'origine
+        const d = e.detail;
+        document.getElementById("f-x").value = Math.round(d.x);
+        document.getElementById("f-y").value = Math.round(d.y);
+        document.getElementById("f-w").value = Math.round(d.width);
+        document.getElementById("f-h").value = Math.round(d.height);
+        info.textContent = Math.round(d.width) + " × " + Math.round(d.height) + " px";
+      }
+    });
+  }
+
+  function destroyCropper() {
+    if (cropper) {
+      cropper.destroy();
+      cropper = null;
+    }
+  }
+
+  if (img.complete) {
+    initCropper();
+  } else {
+    img.addEventListener("load", initCropper);
+  }
+
+  // Le recadreur n'est actif que dans l'onglet « Recadrer »
+  document.querySelectorAll("#tools button").forEach(function (b) {
+    b.addEventListener("shown.bs.tab", function () {
+      if (b.dataset.bsTarget === "#t-crop") {
+        initCropper();
+      } else {
+        destroyCropper();
+      }
+    });
+  });
+
+  // Rapport largeur/hauteur de la zone de recadrage
+  document.querySelectorAll("#ratios button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll("#ratios button").forEach(function (x) { x.classList.remove("active"); });
+      b.classList.add("active");
+      if (cropper) cropper.setAspectRatio(parseFloat(b.dataset.r));
+    });
+  });
+
+  // --- Redimensionnement ---
+  const rw = document.getElementById("r-w");
+  const rh = document.getElementById("r-h");
+  const keep = document.getElementById("keep");
+
+  rw.addEventListener("input", function () {
+    if (keep.checked && rw.value) {
+      rh.value = Math.max(1, Math.round(rw.value * NAT_H / NAT_W));
+    }
+  });
+  rh.addEventListener("input", function () {
+    if (keep.checked && rh.value) {
+      rw.value = Math.max(1, Math.round(rh.value * NAT_W / NAT_H));
+    }
+  });
+
+  document.querySelectorAll("input[name=mode]").forEach(function (r) {
+    r.addEventListener("change", function () {
+      const pc = document.getElementById("m-pc").checked;
+      document.getElementById("box-px").classList.toggle("d-none", pc);
+      document.getElementById("box-pc").classList.toggle("d-none", !pc);
+    });
+  });
+</script>
+{% endblock %}
