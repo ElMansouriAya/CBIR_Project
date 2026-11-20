@@ -44,11 +44,13 @@ def create_app():
     from backend.routes.gallery import gallery_bp
     from backend.routes.categories import categories_bp
     from backend.routes.transform import transform_bp
+    from backend.routes.dataset import dataset_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(gallery_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(transform_bp)
+    app.register_blueprint(dataset_bp)
 
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)
