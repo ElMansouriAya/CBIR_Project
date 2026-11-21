@@ -45,12 +45,17 @@ def create_app():
     from backend.routes.categories import categories_bp
     from backend.routes.transform import transform_bp
     from backend.routes.dataset import dataset_bp
+    from backend.routes.similarity import similarity_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(gallery_bp)
     app.register_blueprint(categories_bp)
     app.register_blueprint(transform_bp)
     app.register_blueprint(dataset_bp)
+    app.register_blueprint(similarity_bp)
+
+    from backend.services.descriptors import load_descriptor_catalog
+    app.extensions["ghim_descriptors"] = load_descriptor_catalog(app.config["FEATURES_FOLDER"])
 
     # API de recherche de C (monte si le code de C et les features de B existent)
     register_search_api(app)
@@ -63,7 +68,11 @@ def create_app():
 def register_search_api(app):
     """Monte l'API de recherche de C (contrat, section 7).
     L'app démarre même si le code de C ou les features de B sont absents."""
-    from flask_login import login_required
+    from flask import request
+    from flask_login import current_user, login_required
+    from sqlalchemy.dialects.sqlite import insert
+    from backend.models import SearchCount
+
     try:
         from backend.services.loader import load_engine
         from backend.routes.search_routes import create_search_blueprint
@@ -72,6 +81,24 @@ def register_search_api(app):
         bp = create_search_blueprint(
             engine, normalizer=normalizer, auth_decorators=[login_required]
         )
+
+        @bp.after_request
+        def count_successful_search(response):
+            if (
+                request.endpoint == f"{bp.name}.searchresource"
+                and request.method == "POST"
+                and response.status_code == 200
+                and current_user.is_authenticated
+            ):
+                # Une seule écriture SQLite, même si deux recherches aboutissent en parallèle.
+                counter = insert(SearchCount).values(user_id=current_user.id, total=1)
+                db.session.execute(counter.on_conflict_do_update(
+                    index_elements=[SearchCount.user_id],
+                    set_={"total": SearchCount.total + 1},
+                ))
+                db.session.commit()
+            return response
+
         app.register_blueprint(bp, url_prefix="/api")
     except (ImportError, FileNotFoundError, ValueError) as e:
         log.warning("API de recherche non montée : %s", e)

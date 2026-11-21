@@ -1,15 +1,21 @@
 {% extends "base.html" %}
+{% from "studio_controls.html" import sort_menu %}
 {% block title %}Bibliothèque GHIM · VisualVault{% endblock %}
 {% block content %}
 <div class="page-header">
   <div>
     <h1 class="page-title">Bibliothèque GHIM</h1>
-    <p class="page-sub">{{ pagination.total }} image{{ 's' if pagination.total > 1 }}</p>
+    <p class="page-sub">Parcourez les images de référence et choisissez une image à analyser.</p>
   </div>
+</div>
+
+<div class="filter-bar library-filters">
+  <p class="filter-count"><strong>{{ '{:,}'.format(pagination.total).replace(',', '\u202f') }}</strong> image{{ 's' if pagination.total != 1 }}{% if category %} · {{ category }}{% endif %}</p>
   {% if categories %}
-  <form method="get" action="{{ url_for('dataset.index') }}" class="d-flex align-items-center gap-2 flex-wrap">
-    <label class="text-muted small" for="dataset-category">Catégorie</label>
-    <select name="category" id="dataset-category" class="form-select form-select-sm w-auto">
+  <form method="get" action="{{ url_for('dataset.index') }}" class="filter-form">
+    <label for="dataset-category">Catégorie</label>
+    <select name="category" id="dataset-category" class="form-select form-select-sm" data-menu-select="folder2"
+            data-menu-search="Rechercher une catégorie">
       <option value="">Toutes les catégories</option>
       {% if category and category not in categories %}
       <option value="{{ category }}" selected>{{ category }}</option>
@@ -18,59 +24,72 @@
       <option value="{{ name }}"{% if category == name %} selected{% endif %}>{{ name }}</option>
       {% endfor %}
     </select>
-    <button type="submit" class="btn btn-outline-primary btn-sm">Filtrer</button>
+    <label class="visually-hidden" for="dataset-sort">Tri</label>
+    {{ sort_menu('dataset-sort', sort, 'Ordre GHIM') }}
+    <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel" aria-hidden="true"></i> Appliquer</button>
   </form>
   {% endif %}
 </div>
 
 {% if pagination.items %}
-<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+<div class="image-grid library-grid{{ ' library-filtered' if 'category' in request.args or 'sort' in request.args }}">
   {% for image in pagination.items %}
   {% set image_url = url_for('dataset.serve', image_id=image.id) %}
-  <div class="col">
-    <figure class="card-soft p-2 mb-0 h-100">
-      <a class="d-block tile bg-light shadow-none" href="{{ image_url }}">
-        <img class="object-fit-contain" src="{{ image_url }}" alt="{{ image.filename }}" loading="lazy">
+    <article class="image-card">
+      <a class="tile" href="{{ image_url }}">
+        <img src="{{ image_url }}" alt="{{ image.filename }}" loading="lazy">
       </a>
-      <figcaption class="px-1 pt-2">
-        <div class="small fw-semibold text-truncate" title="{{ image.filename }}">{{ image.filename }}</div>
-        <div class="small text-muted text-truncate">{{ image.dataset_category }}</div>
-      </figcaption>
-    </figure>
-  </div>
+      <div class="image-card-body">
+        <h2 class="image-name" title="{{ image.filename }}">{{ image.filename }}</h2>
+        <span class="category-tag">{{ image.dataset_category }}</span>
+        <div class="library-actions">
+          <a class="btn btn-soft photo-primary" href="{{ url_for('similarity.index', image_id=image.id) }}" aria-label="Trouver des images similaires">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <span class="library-action-full">Trouver des images similaires</span><span class="library-action-short" aria-hidden="true">Images similaires</span>
+          </a>
+          <a class="btn btn-quiet photo-secondary" href="{{ url_for('dataset.descriptors', image_id=image.id) }}" aria-label="Voir les descripteurs">
+            <i class="bi bi-bar-chart" aria-hidden="true"></i>
+            <span class="library-action-full">Voir les descripteurs</span><span class="library-action-short" aria-hidden="true">Descripteurs</span>
+          </a>
+        </div>
+      </div>
+    </article>
   {% endfor %}
 </div>
 
-{% if pagination.pages > 1 %}
-<nav class="mt-4" aria-label="Pages de la bibliothèque">
-  <ul class="pagination pagination-sm flex-wrap justify-content-center">
-    {% if pagination.has_prev %}
+<nav class="library-pagination" aria-label="Pages de la bibliothèque">
+  <p class="page-count">Page <strong>{{ pagination.page }}</strong> sur {{ pagination.pages }}</p>
+  <ul class="pagination pagination-sm">
     <li class="page-item">
-      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=pagination.prev_num) }}">Précédente</a>
+      {% if pagination.has_prev %}
+      <a class="page-link" aria-label="Page précédente" rel="prev" href="{{ url_for('dataset.index', category=category or none, page=pagination.prev_num, sort=sort or none) }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+      {% else %}
+      <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+      {% endif %}
     </li>
-    {% endif %}
-    {% for number in pagination.iter_pages() %}
+    {% for number in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
     {% if number == pagination.page %}
     <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
     {% elif number %}
-    <li class="page-item">
-      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=number) }}">{{ number }}</a>
+    <li class="page-item page-number">
+      <a class="page-link" aria-label="Page {{ number }}" href="{{ url_for('dataset.index', category=category or none, page=number, sort=sort or none) }}">{{ number }}</a>
     </li>
     {% else %}
-    <li class="page-item disabled"><span class="page-link">…</span></li>
+    <li class="page-item page-number"><span class="page-link page-gap" aria-hidden="true">…</span></li>
     {% endif %}
     {% endfor %}
-    {% if pagination.has_next %}
     <li class="page-item">
-      <a class="page-link" href="{{ url_for('dataset.index', category=category or none, page=pagination.next_num) }}">Suivante</a>
+      {% if pagination.has_next %}
+      <a class="page-link" aria-label="Page suivante" rel="next" href="{{ url_for('dataset.index', category=category or none, page=pagination.next_num, sort=sort or none) }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+      {% else %}
+      <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+      {% endif %}
     </li>
-    {% endif %}
   </ul>
 </nav>
-{% endif %}
 {% else %}
 <div class="card-soft empty-state">
-  <i class="bi bi-collection" aria-hidden="true"></i>
+  <span class="empty-icon"><i class="bi bi-collection" aria-hidden="true"></i></span>
   {% if categories and category %}
   <h2 class="h5 mt-3">Aucune image dans cette catégorie</h2>
   <a href="{{ url_for('dataset.index') }}">Voir toutes les images</a>

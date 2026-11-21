@@ -17,6 +17,11 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
 
+class SearchCount(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), primary_key=True)
+    total = db.Column(db.Integer, nullable=False)
+
+
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)

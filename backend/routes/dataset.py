@@ -4,6 +4,7 @@ from flask_login import login_required
 from backend.dataset import resolve_dataset_jpeg
 from backend.extensions import db
 from backend.models import Image
+from backend.services.descriptors import image_descriptors
 
 dataset_bp = Blueprint("dataset", __name__, url_prefix="/dataset")
 PAGE_SIZE = 25
@@ -46,3 +47,11 @@ def serve(image_id):
     response.cache_control.private = True
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
+
+
+@dataset_bp.get("/<int:image_id>/descripteurs")
+@login_required
+def descriptors(image_id):
+    image = get_dataset_image_or_404(image_id)
+    values = image_descriptors(current_app.extensions["ghim_descriptors"], image)
+    return render_template("descriptors.html", image=image, values=values)

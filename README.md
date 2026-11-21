@@ -99,7 +99,28 @@ $env:FEATURES_FOLDER = "C:/chemin/vers/validation_stretched"
 .\.venv\Scripts\python.exe -m flask --app backend.app run
 ```
 
-Si les JPEG sont ailleurs, définissez `DATASET_FOLDER` sur le dossier qui contient les sous-dossiers des catégories, par exemple `C:/donnees/ghim/dataset`. L’option `--mapping` permet aussi de sélectionner un fichier en particulier. L’import de la bibliothèque fonctionne avec le mapping et les JPEG seuls.
+Si les JPEG sont ailleurs, définissez `DATASET_FOLDER` sur le dossier qui contient les sous-dossiers des catégories, par exemple `C:/donnees/ghim/dataset`. L’option `--mapping` permet aussi de sélectionner un fichier en particulier. Pour tester la recherche avec M3, gardez le mapping et son `descriptors_raw.npy` associé dans le même `FEATURES_FOLDER`. L’import de la bibliothèque fonctionne avec le mapping et les JPEG seuls.
+
+### Module A — Recherche par similarité
+
+Dans la bibliothèque, choisissez **Trouver des images similaires** sous une image GHIM. Les résultats apparaissent dans l’ordre renvoyé par M3. Cochez les images pertinentes puis choisissez **Relancer avec la sélection** pour passer à l’itération suivante. Le bouton **Relancer la recherche** démarre une nouvelle session à partir de l’image requête.
+
+La carte **Recherches** du tableau de bord compte les recherches initiales réussies du compte connecté. Le total démarre à zéro et persiste dans SQLite après redémarrage. Flask crée la table du compteur au démarrage, y compris sur une base existante.
+
+Pour vérifier le lot et le parcours sur SQLite isolé, lancez depuis la racine du dépôt :
+
+```powershell
+.\.venv\Scripts\python.exe scripts/check_features.py --features "features/validation_stretched"
+.\.venv\Scripts\python.exe -m pytest -q tests/test_similarity.py tests/test_search_count.py
+```
+
+`features/validation_stretched` doit contenir `descriptors_raw.npy` et `image_mapping.json` issus de la même livraison. Les tests de recherche génèrent leurs propres JPEG et vecteurs.
+
+### Module A — Descripteurs d’une image GHIM
+
+Dans la bibliothèque, cliquez sur **Voir les descripteurs**. L’application lit les cinq blocs du vecteur brut du lot chargé au démarrage. Le lot doit associer l’ID, le nom, la catégorie et le chemin de la même image GHIM. Si aucun vecteur exploitable ne correspond, la fiche affiche un message d’indisponibilité. Après installation d’un nouveau lot dans `FEATURES_FOLDER`, redémarrez Flask.
+
+L’API HTTP de M2 sera raccordée quand son blueprint et le format effectif de ses réponses seront disponibles. Les tests de la fiche utilisent des JPEG et des vecteurs de démonstration dans une base SQLite isolée.
 
 ### Module C : recherche, retour de pertinence, évaluation
 
