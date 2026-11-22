@@ -1,0 +1,24 @@
+{% macro photo_menu(filename, actions) %}
+<div class="dropdown photo-menu">
+  <button class="btn btn-outline-secondary icon-btn" type="button" data-bs-toggle="dropdown"
+          aria-expanded="false" aria-label="Actions pour {{ filename }}">
+    <i class="bi bi-three-dots" aria-hidden="true"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    {% for icon, label, href in actions %}
+    <li><a class="dropdown-item" href="{{ href }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i>{{ label }}</a></li>
+    {% endfor %}
+  </ul>
+  <noscript>
+    {% for icon, label, href in actions %}<a href="{{ href }}">{{ label }}</a>{% endfor %}
+  </noscript>
+</div>
+{% endmacro %}
+
+{% macro sort_menu(id, sort, default_label) %}
+<select name="sort" id="{{ id }}" class="form-select form-select-sm" data-menu-select="sort-down">
+  <option value="">{{ default_label }}</option>
+  <option value="name"{% if sort == 'name' %} selected{% endif %}>Nom A–Z</option>
+  <option value="name-desc"{% if sort == 'name-desc' %} selected{% endif %}>Nom Z–A</option>
+</select>
+{% endmacro %}

@@ -30,9 +30,16 @@ def index():
     page = request.args.get("page", 1, type=int)
     if not 1 <= page <= 2**31 - 1:
         abort(404)
-    pagination = query.order_by(Image.id).paginate(page=page, per_page=PAGE_SIZE)
+    orders = {"name": Image.filename.asc(), "name-desc": Image.filename.desc()}
+    sort = request.args.get("sort", "")
+    if sort not in orders:
+        sort = ""
+    pagination = query.order_by(orders.get(sort, Image.id.asc()), Image.id.asc()).paginate(
+        page=page, per_page=PAGE_SIZE
+    )
     return render_template("dataset.html", pagination=pagination,
-                           categories=[name for (name,) in category_rows], category=category)
+                           categories=[name for (name,) in category_rows],
+                           category=category, sort=sort)
 
 
 @dataset_bp.get("/file/<int:image_id>")

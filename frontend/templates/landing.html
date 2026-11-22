@@ -1,0 +1,159 @@
+{% from "site_icons.html" import icon %}
+{% macro photo(file, alt, eager=false) %}
+{% if file in landing_photos %}
+{% set width, height = landing_photos[file] %}
+<img src="{{ url_for('main.landing_photo', name=file) }}"
+     alt="{{ alt }}" width="{{ width }}" height="{{ height }}"
+     {% if eager %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+{% endif %}
+{% endmacro %}
+<!doctype html>
+<html lang="fr" class="landing-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>VisualVault · Recherche d’images par similarité</title>
+  {% include "typography.html" %}
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,600&amp;display=swap">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css', v=asset_v('css/landing.css')) }}">
+</head>
+<body class="landing-page" id="accueil">
+  {% set login_url = url_for('auth.login') %}
+  {% set register_url = url_for('auth.register') %}
+  {% set features_url = url_for('main.landing', _anchor='fonctionnalites') %}
+  {% set top_url = url_for('main.landing', _anchor='accueil') %}
+  <a class="landing-skip" href="{{ url_for('main.landing', _anchor='contenu') }}">Aller au contenu</a>
+  <header class="landing-header">
+    <div class="landing-header-surface">
+      <div class="landing-container landing-header-inner">
+        <a class="landing-brand" href="{{ top_url }}">
+          <span class="landing-brand-icon">{{ icon('camera') }}</span>
+          VisualVault
+        </a>
+        <button class="landing-menu-toggle" type="button" aria-label="Ouvrir le menu"
+                aria-expanded="false" aria-controls="landing-menu" hidden>{{ icon('menu') }}</button>
+        <div class="landing-menu" id="landing-menu">
+          <nav class="landing-nav" aria-label="Navigation principale">
+            <a class="landing-link" href="{{ features_url }}"><span>Fonctionnalités</span></a>
+          </nav>
+          <nav class="landing-account" aria-label="Accès au compte">
+            <a class="landing-button landing-button-primary" href="{{ login_url }}">Se connecter</a>
+            <a class="landing-button landing-button-primary" href="{{ register_url }}">Créer un compte</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="contenu" tabindex="-1">
+    <section class="landing-container landing-hero" aria-labelledby="landing-title">
+      <div class="landing-hero-copy">
+        <h1 id="landing-title">Retrouvez vos images par <em class="landing-title-accent">ressemblance</em></h1>
+        <p>Importez et organisez vos photos, puis lancez une recherche à partir d’une image. VisualVault compare les couleurs et les textures pour vous proposer des images similaires. Sélectionnez les résultats les plus pertinents pour affiner la recherche.</p>
+        <div class="landing-actions">
+          <a class="landing-button landing-button-primary" href="{{ register_url }}">Créer un compte</a>
+          <a class="landing-button landing-button-secondary" href="{{ features_url }}">Découvrir le fonctionnement</a>
+        </div>
+      </div>
+
+      <figure class="landing-preview" aria-label="Exemple illustratif de recherche par similarité">
+        <div class="landing-card landing-demo">
+          <p class="landing-demo-title">Images similaires</p>
+          <div class="landing-photo landing-query">
+            {{ photo('falaise', 'Falaise couverte de verdure au-dessus de l’océan', eager=true) }}
+            <span>Image requête</span>
+          </div>
+          <div class="landing-demo-results">
+            {% for file, alt, score in [
+              ('vagues', 'Vagues sur un rivage rocheux', '98 %'),
+              ('crique', 'Crique bordée de rochers et de montagnes', '94 %'),
+              ('plage', 'Plage au pied de falaises ensoleillées', '87 %')
+            ] %}
+            <div class="landing-photo">
+              {{ photo(file, alt) }}
+              <span>{{ score }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="landing-card landing-descriptor" hidden>
+          <p id="descriptor-title">Descripteur couleur</p>
+          <div class="landing-bars" role="group" aria-labelledby="descriptor-title"></div>
+        </div>
+      </figure>
+    </section>
+
+    <section class="landing-container landing-section" id="fonctionnalites" aria-labelledby="features-title" tabindex="-1">
+      <h2 id="features-title">Fonctionnalités</h2>
+      <div class="landing-features">
+        {% for symbol, title, description in [
+          ('folder', 'Votre galerie, à votre façon', 'Importez vos photos, classez-les par catégorie et retrouvez-les dans votre espace personnel.'),
+          ('search', 'Recherchez à partir d’une image', 'Choisissez une image de référence et explorez les résultats classés par similarité visuelle.'),
+          ('check', 'Affinez vos résultats', 'Indiquez les images qui correspondent le mieux à votre recherche pour ajuster les résultats suivants.'),
+          ('library', 'Explorez la bibliothèque GHIM-10K', 'Parcourez 10 000 images réparties en 20 catégories et consultez leurs descripteurs de couleur et de texture.')
+        ] %}
+        <article class="landing-card landing-feature">
+          <span class="landing-symbol">{{ icon(symbol) }}</span>
+          <h3>{{ title }}</h3>
+          <p>{{ description }}</p>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="landing-container landing-section" aria-labelledby="explore-title">
+      <div class="landing-invitation">
+        <div>
+          <h2 id="explore-title">Quelle image allez-vous explorer en premier ?</h2>
+          <p>Créez votre compte pour ouvrir votre galerie et essayer la recherche par similarité.</p>
+          <div class="landing-actions">
+            <a class="landing-button landing-button-white" href="{{ register_url }}">Créer mon compte</a>
+            <a class="landing-link landing-text-link" href="{{ login_url }}"><span>Déjà un compte ? Se connecter</span>{{ icon('arrow') }}</a>
+          </div>
+        </div>
+        <div class="landing-category-grid">
+          {% for file, title, alt in [
+            ('falaise', 'Sea Shores', 'Falaise surplombant l’océan'),
+            ('montagne', 'Mountains', 'Sommets enneigés au-dessus d’une vallée bleue'),
+            ('voilier', 'Yacht', 'Voilier sous un ciel bleu'),
+            ('coucher', 'Sunset', 'Coucher de soleil sur une plage')
+          ] %}
+          <a class="landing-category" href="{{ register_url }}">
+            <span class="landing-category-photo">{{ photo(file, alt) }}</span>
+            <span class="landing-category-label">{{ title }}{{ icon('diagonal') }}</span>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="landing-footer">
+    <div class="landing-container">
+      <div class="landing-footer-grid">
+        <div>
+          <a class="landing-brand" href="{{ top_url }}">
+            <span class="landing-brand-icon">{{ icon('camera') }}</span>
+            VisualVault
+          </a>
+          <p>Retrouvez vos images par ressemblance.</p>
+        </div>
+        <nav aria-labelledby="footer-navigation">
+          <h2 id="footer-navigation">Navigation</h2>
+          <a class="landing-link" href="{{ features_url }}"><span>Fonctionnalités</span></a>
+        </nav>
+        <nav aria-labelledby="footer-account">
+          <h2 id="footer-account">Compte</h2>
+          <a class="landing-link" href="{{ login_url }}"><span>Se connecter</span></a>
+          <a class="landing-link" href="{{ register_url }}"><span>Créer un compte</span></a>
+        </nav>
+      </div>
+      <div class="landing-footer-bottom">
+        <p>© 2026 VisualVault. Tous droits réservés.</p>
+        <a class="landing-button landing-top-link" href="{{ top_url }}">Retour en haut {{ icon('arrow-up') }}</a>
+      </div>
+    </div>
+  </footer>
+  <script defer src="{{ url_for('static', filename='js/landing.js', v=asset_v('js/landing.js')) }}"></script>
+</body>
+</html>

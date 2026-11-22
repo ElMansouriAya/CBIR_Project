@@ -1,0 +1,47 @@
+{% from "site_icons.html" import icon %}
+{% macro nav_link(endpoint, symbol, label) %}
+{% set active = request.blueprint == endpoint.split('.')[0] %}
+<a class="site-nav-link" href="{{ url_for(endpoint) }}" title="{{ label }}"
+   {% if active %}aria-current="{{ 'page' if request.endpoint == endpoint else 'location' }}"{% endif %}>
+  {{ icon(symbol) }}<span>{{ label }}</span>
+</a>
+{% endmacro %}
+
+<header class="topbar">
+  <a class="site-brand" href="{{ url_for('main.dashboard') }}">
+    <span class="site-brand-icon">{{ icon('camera') }}</span><span>VisualVault</span>
+  </a>
+  <button class="btn btn-outline-secondary site-nav-toggle" type="button" aria-controls="site-sidebar"
+          aria-expanded="false" aria-label="Ouvrir la navigation" hidden>{{ icon('menu') }}</button>
+</header>
+
+<aside class="site-sidebar" id="site-sidebar">
+  <a class="site-brand" href="{{ url_for('main.dashboard') }}" aria-label="VisualVault">
+    <span class="site-brand-icon">{{ icon('camera') }}</span><span>VisualVault</span>
+  </a>
+  <nav class="site-nav" aria-label="Navigation principale">
+    <p class="site-nav-title">Espace de travail</p>
+    {{ nav_link('main.dashboard', 'dashboard', 'Tableau de bord') }}
+    {{ nav_link('gallery.index', 'image', 'Ma galerie') }}
+    {{ nav_link('categories.index', 'folder', 'Catégories') }}
+    {{ nav_link('transform.index', 'crop', 'Transformations') }}
+    <p class="site-nav-title">Analyse visuelle</p>
+    {{ nav_link('dataset.index', 'library', 'Bibliothèque GHIM') }}
+    {{ nav_link('similarity.index', 'search', 'Recherche') }}
+  </nav>
+
+  <details class="site-account">
+    <summary aria-label="Menu de {{ current_user.username }}">
+      <span class="site-avatar" aria-hidden="true">{{ current_user.username[:1]|upper }}</span>
+      <span class="site-account-copy">
+        <span class="site-account-name" title="{{ current_user.username }}">{{ current_user.username }}</span>
+        <span class="site-account-caption">Compte personnel</span>
+      </span>
+      <span class="site-account-chevron">{{ icon('chevron') }}</span>
+    </summary>
+    <div class="site-account-menu">
+      <a href="{{ url_for('gallery.index') }}">{{ icon('image') }} Ma galerie</a>
+      <a href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Se déconnecter</a>
+    </div>
+  </details>
+</aside>

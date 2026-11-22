@@ -1,26 +1,29 @@
 {% extends "base.html" %}
+{% from "site_icons.html" import icon %}
 {% block title %}Catégories · VisualVault{% endblock %}
+{% block main_class %} workspace{% endblock %}
 
 {% macro render_nodes(nodes) %}
 <ul>
   {% for n in nodes %}
   <li>
     <div class="cat-row">
-      <i class="bi {{ 'bi-folder2-open' if n.children else 'bi-folder2' }}"></i>
+      <i class="bi {{ 'bi-folder2-open' if n.children else 'bi-folder2' }}" aria-hidden="true"></i>
       <a class="cat-name" href="{{ url_for('gallery.index', category=n.cat.id) }}">{{ n.cat.name }}</a>
       <span class="cat-count">{{ n.count }}</span>
       <div class="cat-actions">
-        <button type="button" class="btn btn-sm btn-light btn-add-sub" data-parent="{{ n.cat.id }}" title="Ajouter une sous-catégorie">
-          <i class="bi bi-folder-plus"></i>
+        <button type="button" class="btn btn-light icon-btn btn-add-sub" data-parent="{{ n.cat.id }}"
+                aria-label="Ajouter une sous-catégorie à {{ n.cat.name }}" title="Ajouter une sous-catégorie">
+          <i class="bi bi-folder-plus" aria-hidden="true"></i>
         </button>
-        <button type="button" class="btn btn-sm btn-light btn-rename"
+        <button type="button" class="btn btn-light icon-btn btn-rename"
                 data-url="{{ url_for('categories.rename', cat_id=n.cat.id) }}"
-                data-name="{{ n.cat.name }}" title="Renommer">
-          <i class="bi bi-pencil"></i>
+                data-name="{{ n.cat.name }}" aria-label="Renommer {{ n.cat.name }}" title="Renommer">
+          <i class="bi bi-pencil" aria-hidden="true"></i>
         </button>
         <form method="post" action="{{ url_for('categories.delete', cat_id=n.cat.id) }}"
-              onsubmit="return confirm('Supprimer « {{ n.cat.name }} » et ses sous-catégories ? Les images seront conservées.')">
-          <button class="btn btn-sm btn-light text-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+              onsubmit="return confirm('Supprimer cette catégorie et ses sous-catégories ? Les images seront conservées.')">
+          <button class="btn btn-light icon-btn text-danger" aria-label="Supprimer {{ n.cat.name }}" title="Supprimer"><i class="bi bi-trash" aria-hidden="true"></i></button>
         </form>
       </div>
     </div>
@@ -30,66 +33,68 @@
 </ul>
 {% endmacro %}
 
-{% block content %}
-<div class="page-header">
+{% block page_header %}
+<header class="page-header">
   <div>
     <h1 class="page-title">Catégories</h1>
-    <p class="page-sub">Organisez vos images en hiérarchie (jusqu'à {{ max_depth }} niveaux).</p>
+    <p class="page-sub">Organisez vos images par catégories, jusqu’à {{ max_depth }} niveaux.</p>
   </div>
-</div>
+</header>
+{% endblock %}
 
-<div class="row g-4">
-  <div class="col-lg-4">
-    <form method="post" action="{{ url_for('categories.create') }}" class="card-soft">
-      <h6 class="mb-3">Nouvelle catégorie</h6>
-      <div class="mb-3">
-        <label class="form-label">Nom</label>
-        <input type="text" name="name" id="cat-name" class="form-control" maxlength="100" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Catégorie parente</label>
-        <select name="parent_id" id="cat-parent" class="form-select">
-          <option value="">— Aucune (niveau racine) —</option>
-          {% for c, depth in options %}
-          <option value="{{ c.id }}">{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <button class="btn btn-primary w-100"><i class="bi bi-plus-lg me-1"></i>Créer</button>
-    </form>
-  </div>
+{% block content %}
+<div class="category-layout">
+  <form method="post" action="{{ url_for('categories.create') }}" class="card-soft category-form">
+    <h2 class="section-title">Nouvelle catégorie</h2>
+    <div>
+      <label class="form-label" for="cat-name">Nom</label>
+      <input type="text" name="name" id="cat-name" class="form-control" placeholder="Ex. Voyages" maxlength="100" required>
+    </div>
+    <div>
+      <label class="form-label" for="cat-parent">Catégorie parente</label>
+      <select name="parent_id" id="cat-parent" class="form-select" data-menu-select="folder2">
+        <option value="">— Aucune (niveau racine) —</option>
+        {% for c, depth in options %}
+        <option value="{{ c.id }}">{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-primary" type="submit">{{ icon('plus') }} Créer la catégorie</button>
+  </form>
 
-  <div class="col-lg-8">
-    <div class="card-soft">
-      {% if tree %}
+  {% if tree %}
+  <section class="card-soft category-list" aria-labelledby="category-list-heading">
+    <h2 class="section-title" id="category-list-heading">Vos catégories</h2>
+    <div class="collection-scroll" role="region" aria-labelledby="category-list-heading" tabindex="0">
       <ul class="cat-tree">
         <li>
           <div class="cat-row">
-            <i class="bi bi-inbox"></i>
+            <i class="bi bi-inbox" aria-hidden="true"></i>
             <a class="cat-name" href="{{ url_for('gallery.index', category='none') }}">Sans catégorie</a>
             <span class="cat-count">{{ uncategorized }}</span>
           </div>
         </li>
       </ul>
       <div class="cat-tree">{{ render_nodes(tree) }}</div>
-      {% else %}
-      <div class="empty-state">
-        <i class="bi bi-folder2-open"></i>
-        <h5>Aucune catégorie</h5>
-        <p class="mb-0">Créez-en une avec le formulaire.</p>
-      </div>
-      {% endif %}
     </div>
+  </section>
+  {% else %}
+  <div class="card-soft empty-state">
+    <span class="empty-icon">{{ icon('folder') }}</span>
+    <h2>Aucune catégorie</h2>
+    <p>Créez-en une avec le formulaire.</p>
   </div>
+  {% endif %}
 </div>
 
 <!-- Fenêtre de renommage -->
-<div class="modal fade" id="renameModal" tabindex="-1">
+<div class="modal fade" id="renameModal" tabindex="-1" aria-labelledby="rename-title">
   <div class="modal-dialog modal-dialog-centered">
     <form method="post" id="rename-form" class="modal-content">
-      <div class="modal-header"><h6 class="modal-title">Renommer la catégorie</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-header"><h2 class="modal-title section-title" id="rename-title">Renommer la catégorie</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button></div>
       <div class="modal-body">
+        <label class="form-label" for="rename-input">Nouveau nom</label>
         <input type="text" name="name" id="rename-input" class="form-control" maxlength="100" required>
       </div>
       <div class="modal-footer">
@@ -105,20 +110,24 @@
 <script>
   // « + » : présélectionne le parent dans le formulaire de création
   document.querySelectorAll(".btn-add-sub").forEach(b => b.addEventListener("click", () => {
-    document.getElementById("cat-parent").value = b.dataset.parent;
+    const parent = document.getElementById("cat-parent");
+    parent.value = b.dataset.parent;
+    parent.dispatchEvent(new Event("change", { bubbles: true }));
     const n = document.getElementById("cat-name");
-    n.scrollIntoView({behavior: "smooth", block: "center"});
+    n.scrollIntoView({block: "center"});
     n.focus();
   }));
 
   // Renommer : ouvre la fenêtre avec le nom actuel
   const modalEl = document.getElementById("renameModal");
-  const modal = new bootstrap.Modal(modalEl);
+  let renameTrigger;
   document.querySelectorAll(".btn-rename").forEach(b => b.addEventListener("click", () => {
+    renameTrigger = b;
     document.getElementById("rename-form").action = b.dataset.url;
     document.getElementById("rename-input").value = b.dataset.name;
-    modal.show();
+    window.bootstrap?.Modal.getOrCreateInstance(modalEl).show();
   }));
   modalEl.addEventListener("shown.bs.modal", () => document.getElementById("rename-input").select());
+  modalEl.addEventListener("hidden.bs.modal", () => renameTrigger?.focus());
 </script>
 {% endblock %}

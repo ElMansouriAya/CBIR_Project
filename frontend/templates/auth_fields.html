@@ -1,0 +1,30 @@
+{% macro field(id, name, label, type, autocomplete, placeholder=none, minlength=none, hint=none) %}
+<div>
+  <label for="{{ id }}">{{ label }}</label>
+  <div class="login-field">
+    <svg class="field-icon" viewBox="0 0 24 24" aria-hidden="true">
+      {% if type == 'password' %}
+      <rect x="4" y="11" width="16" height="11" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      {% elif type == 'email' %}
+      <rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/>
+      {% else %}
+      <circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>
+      {% endif %}
+    </svg>
+    <input id="{{ id }}" name="{{ name }}" type="{{ type }}" autocomplete="{{ autocomplete }}"
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}
+           {% if minlength %}minlength="{{ minlength }}"{% endif %}
+           {% if hint %}aria-describedby="{{ id }}-hint"{% endif %} required>
+    {% if type == 'password' %}
+    <button class="password-toggle" type="button" aria-controls="{{ id }}"
+            aria-label="Afficher le mot de passe" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/>
+        <circle cx="12" cy="12" r="3"/><path class="eye-slash" d="M3 3l18 18"/>
+      </svg>
+    </button>
+    {% endif %}
+  </div>
+  {% if hint %}<p id="{{ id }}-hint" class="login-hint">{{ hint }}</p>{% endif %}
+</div>
+{% endmacro %}
