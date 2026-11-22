@@ -43,7 +43,7 @@ def test_dataset_reel_et_mapping_complet_sont_coherents() -> None:
             "image_id": index + 1,
             "filename": nom,
             "category": categorie,
-            "path": chemin.relative_to(DOSSIER_STORAGE).as_posix(),
+            "path": (Path("dataset") / chemin.relative_to(DOSSIER_DATASET.resolve())).as_posix(),
         }
         for index, (categorie, nom, chemin) in enumerate(images_valides)
     ]
