@@ -1,0 +1,23 @@
+:root {
+  --violet: #6C3FC5;
+  --violet-dark: #5530A3;
+  --violet-light: #7B4DDB;
+  --ink: #1B1530;
+  --muted: #6B6784;
+  --line: #E4E0F0;
+  --bg: #F8F6FF;
+  --panel: #2A1766;
+  --white: #FFFFFF;
+  --tint: #F1ECFF;
+  --radius-card: 20px;
+  --radius-field: 12px;
+  --shadow-card: 0 24px 60px -20px rgba(80,40,160,.18), 0 2px 6px rgba(80,40,160,.06);
+  --shadow-primary: 0 10px 24px -8px rgba(108,63,197,.55);
+  --shadow-primary-hover: 0 12px 26px -6px rgba(108,63,197,.65);
+  --surface-border: 1px solid rgba(108,63,197,.08);
+  --primary-gradient: linear-gradient(135deg, var(--violet-light), var(--violet-dark));
+  --page-background:
+    radial-gradient(500px 360px at 100% 0%, rgba(200,170,255,.35), transparent 72%),
+    radial-gradient(420px 360px at 0% 100%, rgba(255,190,220,.30), transparent 72%),
+    var(--bg);
+}

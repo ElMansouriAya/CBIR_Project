@@ -1,49 +1,149 @@
 {% extends "base.html" %}
+{% from "site_icons.html" import icon %}
+{% set import_url = url_for('gallery.index') ~ '#import-images' %}
 {% block title %}Tableau de bord · VisualVault{% endblock %}
-{% block content %}
-<div class="page-header">
+{% block main_class %} workspace{% endblock %}
+{% block page_flashes %}{% endblock %}
+
+{% macro stat(value, label, symbol, href=none, action=none) %}
+{% if href %}<a class="dash-stat" href="{{ href }}">{% else %}<div class="dash-stat">{% endif %}
+  <span class="dash-icon">{{ icon(symbol) }}</span>
   <div>
-    <h1 class="page-title">Bonjour, {{ current_user.username }}</h1>
-    <p class="page-sub">Voici un aperçu de votre galerie.</p>
+    <div class="stat-value">{{ value }}</div>
+    <div class="stat-label">{{ label }}</div>
+    {% if action %}<span class="dash-stat-action">{{ action }} {{ icon('arrow') }}</span>{% endif %}
   </div>
-  <a class="btn btn-primary" href="{{ url_for('gallery.index') }}">
-    <i class="bi bi-upload me-1"></i>Ajouter des images
-  </a>
-</div>
+{% if href %}</a>{% else %}</div>{% endif %}
+{% endmacro %}
 
-<div class="row g-3">
-  <div class="col-md-4">
-    <a href="{{ url_for('gallery.index') }}" class="text-decoration-none">
-      <div class="card-soft stat-card">
-        <div class="stat-icon"><i class="bi bi-image"></i></div>
-        <div>
-          <div class="stat-value">{{ n_images }}</div>
-          <div class="stat-label">Images</div>
-        </div>
-      </div>
+{% block page_header %}
+<header class="page-header">
+  <div class="page-heading">
+    <h1 class="page-title">Tableau de bord</h1>
+    <p class="page-sub">Bonjour, {{ current_user.username }} · {{ n_searches }}
+      {{ 'recherches enregistrées' if n_searches != 1 else 'recherche enregistrée' }}</p>
+  </div>
+  <div class="header-actions">
+    <a class="btn btn-outline-secondary" href="{{ url_for('similarity.index') }}">
+      {{ icon('search') }} Nouvelle recherche
+    </a>
+    <a class="btn btn-primary" href="{{ import_url }}">
+      {{ icon('plus') }} Importer des images
     </a>
   </div>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <ul class="dash-flashes">
+      {% for category, message in messages %}
+      <li role="{{ 'alert' if category == 'danger' else 'status' }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  {% endwith %}
+</header>
+{% endblock %}
 
-  <div class="col-md-4">
-    <a href="{{ url_for('categories.index') }}" class="text-decoration-none">
-      <div class="card-soft stat-card">
-        <div class="stat-icon"><i class="bi bi-folder2-open"></i></div>
-        <div>
-          <div class="stat-value">{{ n_categories }}</div>
-          <div class="stat-label">Catégories</div>
-        </div>
-      </div>
-    </a>
-  </div>
+{% block content %}
+<section class="workspace-tools dash-stats" aria-label="Votre activité">
+  {{ stat(n_images, 'Images', 'image', import_url if n_images == 0 else url_for('gallery.index'),
+          'Importer vos premières images' if n_images == 0 else 'Ouvrir ma galerie') }}
+  {{ stat(n_categories, 'Catégories', 'folder', url_for('categories.index') ~ '#cat-name' if n_categories == 0 else url_for('categories.index'),
+          'Créer une catégorie' if n_categories == 0 else 'Gérer mes catégories') }}
+  {{ stat(n_searches, 'Recherches', 'search') }}
+</section>
 
-  <div class="col-md-4">
-    <div class="card-soft stat-card">
-      <div class="stat-icon"><i class="bi bi-search"></i></div>
-      <div>
-        <div class="stat-value">{{ n_searches }}</div>
-        <div class="stat-label">Recherches</div>
-      </div>
+<div class="dash-panels">
+  <section class="dash-panel" aria-labelledby="ghim-heading">
+    <header class="dash-panel-header">
+      <h2 class="section-title" id="ghim-heading">Explorer GHIM</h2>
+      <a class="dash-text-link" href="{{ url_for('dataset.index') }}">Ouvrir la bibliothèque {{ icon('arrow') }}</a>
+    </header>
+    <div class="dash-ghim">
+      <ul class="dash-mosaic" aria-label="Aperçu des images GHIM">
+        {% for image in ghim_previews %}
+        <li>
+          <a class="dash-tile" href="{{ url_for('similarity.index', image_id=image.id) }}"
+             aria-label="Rechercher des images similaires à {{ image.filename }} · {{ image.dataset_category or 'Sans catégorie' }}">
+            <img src="{{ url_for('dataset.serve', image_id=image.id) }}" alt="" loading="lazy">
+            <span class="dash-tile-label">{{ image.dataset_category or 'Sans catégorie' }} {{ icon('diagonal') }}</span>
+          </a>
+        </li>
+        {% endfor %}
+        {% for _ in range(ghim_previews|length, 5) %}
+        <li aria-hidden="true"></li>
+        {% endfor %}
+      </ul>
+      {% if not ghim_previews %}<p class="dash-ghim-empty">La bibliothèque GHIM est vide.</p>{% endif %}
     </div>
-  </div>
+  </section>
+
+  <section class="dash-panel" aria-labelledby="recent-heading">
+    <header class="dash-panel-header">
+      <h2 class="section-title" id="recent-heading">Images récentes</h2>
+      <a class="dash-text-link" href="{{ url_for('gallery.index') }}">Ma galerie {{ icon('arrow') }}</a>
+    </header>
+    {% if recent_images %}
+    <ul class="dash-recent collection-scroll" aria-labelledby="recent-heading" tabindex="0">
+      {% for image in recent_images %}
+      <li>
+        {% set file_url = url_for('gallery.serve', image_id=image.id) %}
+        <a href="{{ file_url }}">
+          <img src="{{ file_url }}" alt="" loading="lazy">
+          <span class="dash-recent-meta">
+            <strong title="{{ image.filename }}">{{ image.filename }}</strong>
+            {% if image.created_at %}
+            <time datetime="{{ image.created_at.isoformat() }}">{{ image.created_at.strftime('%d/%m/%Y') }}</time>
+            {% endif %}
+          </span>
+          {{ icon('diagonal') }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <form class="dash-empty" action="{{ url_for('gallery.upload') }}" method="post" enctype="multipart/form-data">
+      <span class="empty-icon">{{ icon('upload') }}</span>
+      <p class="dash-empty-title">Aucune image importée</p>
+      <p class="dash-drop-hint" hidden>Déposez vos images ici ou parcourez vos fichiers.</p>
+      <a class="btn btn-outline-secondary" href="{{ import_url }}">Importer</a>
+      <input type="file" name="images" accept="image/*" multiple hidden>
+    </form>
+    {% endif %}
+  </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const upload = document.querySelector(".dash-empty");
+if (upload) {
+  const picker = upload.querySelector("input[type=file]");
+  upload.querySelector("a").addEventListener("click", event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    picker.click();
+  });
+  picker.addEventListener("change", () => {
+    if (picker.files.length) upload.requestSubmit();
+  });
+  if (typeof DataTransfer === "function") {
+    upload.querySelector(".dash-drop-hint").hidden = false;
+    upload.addEventListener("dragover", event => {
+      if (!event.dataTransfer.types.includes("Files")) return;
+      event.preventDefault();
+      upload.setAttribute("data-dragging", "");
+    });
+    upload.addEventListener("dragleave", event => {
+      if (!upload.contains(event.relatedTarget)) upload.removeAttribute("data-dragging");
+    });
+    upload.addEventListener("drop", event => {
+      if (!event.dataTransfer.files.length) return;
+      event.preventDefault();
+      upload.removeAttribute("data-dragging");
+      picker.files = event.dataTransfer.files;
+      upload.requestSubmit();
+    });
+  }
+}
+</script>
 {% endblock %}

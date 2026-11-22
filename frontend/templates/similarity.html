@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Recherche par similarité · VisualVault{% endblock %}
 {% block content %}
-<div class="page-header">
-  <h1 class="page-title">Recherche par similarité</h1>
+<header class="page-header">
+  <div>
+    <h1 class="page-title">Recherche par similarité</h1>
+    <p class="page-sub">Retrouvez les images GHIM qui se rapprochent de votre référence.</p>
+  </div>
   {% if image %}
-  <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('dataset.index') }}">
-    Changer d’image
+  <a class="btn btn-outline-secondary" href="{{ url_for('dataset.index') }}">
+    <i class="bi bi-images" aria-hidden="true"></i> Changer d’image
   </a>
   {% endif %}
-</div>
+</header>
 
 {% if not search_url %}
 <p class="alert alert-warning" role="status">Le moteur de recherche est indisponible. La bibliothèque GHIM reste accessible.</p>
@@ -16,72 +19,75 @@
 
 {% if image %}
 {% set image_url = url_for('dataset.serve', image_id=image.id) %}
-<div class="card-soft mb-4">
-  <div class="row g-3 align-items-center">
-    <div class="col-4 col-sm-3 col-lg-2">
-      <a class="d-block tile bg-light shadow-none" href="{{ image_url }}">
-        <img class="object-fit-contain" src="{{ image_url }}" alt="{{ image.filename }}">
-      </a>
-    </div>
-    <div class="col">
-      <h2 class="h6 text-muted">Image requête</h2>
-      <p class="fw-semibold text-break mb-1">{{ image.filename }}</p>
-      <p class="small text-muted mb-0">{{ image.dataset_category }}</p>
+<div class="similarity-layout">
+  <aside class="card-soft query-card" aria-labelledby="query-heading">
+    <h2 class="section-title" id="query-heading">Image requête</h2>
+    <a class="tile" href="{{ image_url }}">
+      <img src="{{ image_url }}" alt="{{ image.filename }}">
+    </a>
+    <div class="query-meta">
+      <p class="image-name">{{ image.filename }}</p>
+      <span class="category-tag">{{ image.dataset_category }}</span>
       {% if search_url %}
-      <button class="btn btn-outline-primary btn-sm mt-3" type="button" id="similarity-restart">
+      <button class="btn btn-outline-secondary btn-sm" type="button" id="similarity-restart">
         Relancer la recherche
       </button>
       {% endif %}
     </div>
-  </div>
-</div>
+  </aside>
 
 {% if search_url %}
 <section id="similarity-search" aria-labelledby="similarity-heading"
          data-query-id="{{ image.id }}" data-search-url="{{ search_url }}"
          data-feedback-url="{{ feedback_url }}"
          data-image-url="{{ url_for('dataset.serve', image_id=0) }}">
-  <div class="d-flex align-items-center gap-3 mb-2">
-    <h2 class="h5 mb-0" id="similarity-heading">Résultats</h2>
-    <span class="small fw-semibold text-primary" id="similarity-iteration" hidden></span>
+  <div class="results-heading">
+    <h2 class="section-title" id="similarity-heading">Résultats</h2>
+    <span class="category-tag" id="similarity-iteration" hidden></span>
   </div>
-  <p class="text-muted" id="similarity-status" role="status"></p>
+  <p class="search-status" id="similarity-status" role="status" data-state="loading">Recherche en cours…</p>
   <form id="similarity-feedback">
     <fieldset disabled>
-      <div class="card-soft mb-3 py-2" id="similarity-feedback-controls" hidden>
-        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-          <p class="small text-muted mb-0">Marquez les images pertinentes pour affiner la recherche.</p>
-          <button class="btn btn-primary btn-sm" type="submit" disabled>Relancer avec la sélection</button>
+      <div class="feedback-bar" id="similarity-feedback-controls" hidden>
+        <div>
+          <p class="feedback-count" id="similarity-selection-count" role="status">0 image sélectionnée</p>
+          <p class="small text-muted mb-0">Cochez les résultats pertinents pour affiner la recherche.</p>
         </div>
+        <button class="btn btn-primary" type="submit" disabled>
+          <i class="bi bi-sliders" aria-hidden="true"></i> <span data-feedback-label>Relancer avec la sélection</span>
+        </button>
       </div>
-      <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3" id="similarity-results"></div>
+      <div class="image-grid result-grid" id="similarity-results"></div>
     </fieldset>
   </form>
   <noscript><p class="alert alert-info">Activez JavaScript pour lancer la recherche.</p></noscript>
 </section>
 <template id="similarity-card">
-  <div class="col">
-    <div class="card-soft similarity-card p-2 h-100">
-      <a class="d-block tile bg-light shadow-none" data-full-image>
-        <img class="object-fit-contain" loading="lazy">
+  <article class="image-card similarity-card">
+    <div class="image-frame">
+      <a class="tile" data-full-image>
+        <img loading="lazy">
         <span class="position-absolute top-50 start-50 translate-middle w-100 text-center small text-muted"
-              data-missing hidden>JPEG indisponible</span>
+              data-missing hidden>Image indisponible</span>
       </a>
-      <div class="px-1 pt-2">
-        <div class="small fw-semibold text-break" data-category></div>
-        <div class="small text-muted" data-distance hidden></div>
-        <label class="form-check small mt-2 mb-0">
-          <input class="form-check-input" type="checkbox" name="relevant">
-          Pertinente
-        </label>
-      </div>
+      <span class="result-rank" data-rank></span>
+      <span class="result-selected-mark" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
     </div>
-  </div>
+    <div class="image-card-body">
+      <h3 class="image-name" data-category></h3>
+      <p class="result-distance" data-distance hidden></p>
+      <label class="relevance-choice">
+        <input class="form-check-input" type="checkbox" name="relevant">
+        <span>Pertinente</span>
+      </label>
+    </div>
+  </article>
 </template>
 {% endif %}
+</div>
 {% else %}
 <div class="card-soft empty-state">
-  <i class="bi bi-search" aria-hidden="true"></i>
+  <span class="empty-icon"><i class="bi bi-search" aria-hidden="true"></i></span>
   <h2 class="h5 mt-3">Choisissez une image de référence</h2>
   <a class="btn btn-primary mt-2" href="{{ url_for('dataset.index') }}">Ouvrir la bibliothèque GHIM</a>
 </div>

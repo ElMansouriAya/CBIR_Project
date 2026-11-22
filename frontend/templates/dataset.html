@@ -1,16 +1,23 @@
 {% extends "base.html" %}
 {% from "studio_controls.html" import sort_menu %}
+{% from "site_icons.html" import icon %}
+{% set image_count = '{:,}'.format(pagination.total).replace(',', '\u202f') %}
+{% set image_label = 'image' if pagination.total == 1 else 'images' %}
 {% block title %}Bibliothèque GHIM · VisualVault{% endblock %}
-{% block content %}
-<div class="page-header">
+{% block main_class %} workspace{% endblock %}
+
+{% block page_header %}
+<header class="page-header">
   <div>
     <h1 class="page-title">Bibliothèque GHIM</h1>
-    <p class="page-sub">Parcourez les images de référence et choisissez une image à analyser.</p>
+    <p class="page-sub">{{ image_count }} {{ image_label }}</p>
   </div>
-</div>
+</header>
+{% endblock %}
 
-<div class="filter-bar library-filters">
-  <p class="filter-count"><strong>{{ '{:,}'.format(pagination.total).replace(',', '\u202f') }}</strong> image{{ 's' if pagination.total != 1 }}{% if category %} · {{ category }}{% endif %}</p>
+{% block content %}
+<div class="filter-bar library-filters workspace-tools">
+  <p class="filter-count"><strong>{{ image_count }}</strong> {{ image_label }}{% if category %} · {{ category }}{% endif %}</p>
   {% if categories %}
   <form method="get" action="{{ url_for('dataset.index') }}" class="filter-form">
     <label for="dataset-category">Catégorie</label>
@@ -26,76 +33,76 @@
     </select>
     <label class="visually-hidden" for="dataset-sort">Tri</label>
     {{ sort_menu('dataset-sort', sort, 'Ordre GHIM') }}
-    <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-funnel" aria-hidden="true"></i> Appliquer</button>
+    <button type="submit" class="btn btn-primary">{{ icon('filter') }} Appliquer</button>
   </form>
   {% endif %}
 </div>
 
 {% if pagination.items %}
-<div class="image-grid library-grid{{ ' library-filtered' if 'category' in request.args or 'sort' in request.args }}">
-  {% for image in pagination.items %}
-  {% set image_url = url_for('dataset.serve', image_id=image.id) %}
-    <article class="image-card">
-      <a class="tile" href="{{ image_url }}">
-        <img src="{{ image_url }}" alt="{{ image.filename }}" loading="lazy">
-      </a>
-      <div class="image-card-body">
-        <h2 class="image-name" title="{{ image.filename }}">{{ image.filename }}</h2>
-        <span class="category-tag">{{ image.dataset_category }}</span>
-        <div class="library-actions">
-          <a class="btn btn-soft photo-primary" href="{{ url_for('similarity.index', image_id=image.id) }}" aria-label="Trouver des images similaires">
-            <i class="bi bi-search" aria-hidden="true"></i>
-            <span class="library-action-full">Trouver des images similaires</span><span class="library-action-short" aria-hidden="true">Images similaires</span>
-          </a>
-          <a class="btn btn-quiet photo-secondary" href="{{ url_for('dataset.descriptors', image_id=image.id) }}" aria-label="Voir les descripteurs">
-            <i class="bi bi-bar-chart" aria-hidden="true"></i>
-            <span class="library-action-full">Voir les descripteurs</span><span class="library-action-short" aria-hidden="true">Descripteurs</span>
-          </a>
+<section class="collection-scroll photo-scroll" aria-label="Images de la bibliothèque" tabindex="0">
+  <div class="image-grid photo-grid library-grid">
+    {% for image in pagination.items %}
+    {% set image_url = url_for('dataset.serve', image_id=image.id) %}
+      <article class="image-card">
+        <a class="tile" href="{{ image_url }}">
+          <img src="{{ image_url }}" alt="{{ image.filename }}" loading="lazy">
+        </a>
+        <div class="image-card-body">
+          <h2 class="image-name" title="{{ image.filename }}">{{ image.filename }}</h2>
+          <span class="category-tag">{{ image.dataset_category }}</span>
+          <div class="library-actions">
+            <a class="btn btn-soft photo-action photo-primary" href="{{ url_for('similarity.index', image_id=image.id) }}" aria-label="Trouver des images similaires">
+              {{ icon('search') }} Images similaires
+            </a>
+            <a class="btn btn-quiet photo-secondary" href="{{ url_for('dataset.descriptors', image_id=image.id) }}" aria-label="Voir les descripteurs">
+              {{ icon('bars') }} Descripteurs
+            </a>
+          </div>
         </div>
-      </div>
-    </article>
-  {% endfor %}
-</div>
-
-<nav class="library-pagination" aria-label="Pages de la bibliothèque">
-  <p class="page-count">Page <strong>{{ pagination.page }}</strong> sur {{ pagination.pages }}</p>
-  <ul class="pagination pagination-sm">
-    <li class="page-item">
-      {% if pagination.has_prev %}
-      <a class="page-link" aria-label="Page précédente" rel="prev" href="{{ url_for('dataset.index', category=category or none, page=pagination.prev_num, sort=sort or none) }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
-      {% else %}
-      <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
-      {% endif %}
-    </li>
-    {% for number in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
-    {% if number == pagination.page %}
-    <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
-    {% elif number %}
-    <li class="page-item page-number">
-      <a class="page-link" aria-label="Page {{ number }}" href="{{ url_for('dataset.index', category=category or none, page=number, sort=sort or none) }}">{{ number }}</a>
-    </li>
-    {% else %}
-    <li class="page-item page-number"><span class="page-link page-gap" aria-hidden="true">…</span></li>
-    {% endif %}
+      </article>
     {% endfor %}
-    <li class="page-item">
-      {% if pagination.has_next %}
-      <a class="page-link" aria-label="Page suivante" rel="next" href="{{ url_for('dataset.index', category=category or none, page=pagination.next_num, sort=sort or none) }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+  </div>
+
+  <nav class="library-pagination" aria-label="Pages de la bibliothèque">
+    <p class="page-count">Page <strong>{{ pagination.page }}</strong> sur {{ pagination.pages }}</p>
+    <ul class="pagination pagination-sm">
+      <li class="page-item">
+        {% if pagination.has_prev %}
+        <a class="page-link" aria-label="Page précédente" rel="prev" href="{{ url_for('dataset.index', category=category or none, page=pagination.prev_num, sort=sort or none) }}"><i class="bi bi-chevron-left" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-left"></i></span>
+        {% endif %}
+      </li>
+      {% for number in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
+      {% if number == pagination.page %}
+      <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
+      {% elif number %}
+      <li class="page-item page-number">
+        <a class="page-link" aria-label="Page {{ number }}" href="{{ url_for('dataset.index', category=category or none, page=number, sort=sort or none) }}">{{ number }}</a>
+      </li>
       {% else %}
-      <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+      <li class="page-item page-number"><span class="page-link page-gap" aria-hidden="true">…</span></li>
       {% endif %}
-    </li>
-  </ul>
-</nav>
+      {% endfor %}
+      <li class="page-item">
+        {% if pagination.has_next %}
+        <a class="page-link" aria-label="Page suivante" rel="next" href="{{ url_for('dataset.index', category=category or none, page=pagination.next_num, sort=sort or none) }}"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+        {% else %}
+        <span class="page-link is-unavailable" aria-hidden="true"><i class="bi bi-chevron-right"></i></span>
+        {% endif %}
+      </li>
+    </ul>
+  </nav>
+</section>
 {% else %}
 <div class="card-soft empty-state">
-  <span class="empty-icon"><i class="bi bi-collection" aria-hidden="true"></i></span>
+  <span class="empty-icon">{{ icon('library') }}</span>
   {% if categories and category %}
-  <h2 class="h5 mt-3">Aucune image dans cette catégorie</h2>
-  <a href="{{ url_for('dataset.index') }}">Voir toutes les images</a>
+  <h2>Aucune image dans cette catégorie</h2>
+  <a class="btn btn-outline-secondary" href="{{ url_for('dataset.index') }}">Voir toutes les images</a>
   {% else %}
-  <h2 class="h5 mt-3">La bibliothèque GHIM est vide</h2>
-  <p class="mb-0">Les images de référence apparaîtront après l’import du dataset.</p>
+  <h2>La bibliothèque GHIM est vide</h2>
+  <p>Les images de référence apparaîtront après l’import du dataset.</p>
   {% endif %}
 </div>
 {% endif %}

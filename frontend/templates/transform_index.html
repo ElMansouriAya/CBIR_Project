@@ -1,32 +1,42 @@
 {% extends "base.html" %}
+{% from "site_icons.html" import icon %}
+{% set import_url = url_for('gallery.index') ~ '#import-images' %}
 {% block title %}Transformations · VisualVault{% endblock %}
-{% block content %}
-<div class="page-header">
+{% block main_class %} workspace{% endblock %}
+
+{% block page_header %}
+<header class="page-header">
   <div>
     <h1 class="page-title">Transformations</h1>
-    <p class="page-sub">Choisissez une image à recadrer, redimensionner, pivoter ou retourner.</p>
+    <p class="page-sub">Recadrez, faites pivoter et ajustez vos images.</p>
   </div>
-</div>
+  <a class="btn btn-primary" href="{{ import_url }}">{{ icon('plus') }} Importer des images</a>
+</header>
+{% endblock %}
 
+{% block content %}
 {% if images %}
-<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
-  {% for img in images %}
-  <div class="col">
-    <a class="tile d-block" href="{{ url_for('transform.editor', image_id=img.id) }}">
-      <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
-      <div class="tile-overlay">
-        <span class="tile-name">{{ img.filename }}</span>
-        <i class="bi bi-crop"></i>
+<section class="collection-scroll photo-scroll" aria-label="Images à transformer" tabindex="0">
+  <div class="image-grid photo-grid">
+    {% for img in images %}
+    <article class="image-card">
+      <div class="tile"><img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy"></div>
+      <div class="image-card-body">
+        <h2 class="image-name" title="{{ img.filename }}">{{ img.filename }}</h2>
+        <a class="btn btn-outline-secondary photo-action w-100" href="{{ url_for('transform.editor', image_id=img.id) }}">
+          {{ icon('crop') }} Ouvrir l’éditeur
+        </a>
       </div>
-    </a>
+    </article>
+    {% endfor %}
   </div>
-  {% endfor %}
-</div>
+</section>
 {% else %}
 <div class="card-soft empty-state">
-  <i class="bi bi-crop"></i>
-  <h5>Aucune image à transformer</h5>
-  <p class="mb-0">Ajoutez d'abord des images dans la <a href="{{ url_for('gallery.index') }}">galerie</a>.</p>
+  <span class="empty-icon">{{ icon('crop') }}</span>
+  <h2>Aucune image à transformer</h2>
+  <p>Importez des images pour les recadrer, les faire pivoter ou ajuster leurs couleurs.</p>
+  <a class="btn btn-primary" href="{{ import_url }}">{{ icon('plus') }} Importer des images</a>
 </div>
 {% endif %}
 {% endblock %}

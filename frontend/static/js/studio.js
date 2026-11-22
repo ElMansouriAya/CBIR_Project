@@ -148,11 +148,17 @@
     }
 
     trigger.addEventListener("click", event => {
-      if (panel.hidden) open(event.pointerType === "touch");
-      else close(true);
+      if (!panel.hidden) {
+        close(true);
+        return;
+      }
+      const touch = event.pointerType === "touch"
+        || (!event.pointerType && event.detail > 0 && window.matchMedia("(pointer: coarse)").matches);
+      open(touch);
     });
     search?.addEventListener("input", filterOptions);
     root.addEventListener("keydown", event => {
+      if (event.isComposing) return;
       const { key, target } = event;
       if (key === "Escape" && !panel.hidden) {
         event.preventDefault();
@@ -185,6 +191,7 @@
     window.addEventListener("resize", placePanel);
     window.addEventListener("scroll", placePanel, { passive: true });
     window.visualViewport?.addEventListener("resize", placePanel);
+    window.visualViewport?.addEventListener("scroll", placePanel, { passive: true });
 
     root.append(trigger, panel);
     select.after(root);

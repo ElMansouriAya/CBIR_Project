@@ -1,3 +1,4 @@
+from io import BytesIO
 import json
 import re
 
@@ -57,6 +58,31 @@ def login(client, app):
     response = client.post("/login", data={"username": "test-user", "password": "test-password"})
     assert response.status_code == 302
     return user_id
+
+
+def test_landing_uses_only_curated_previews_from_the_dataset(storage):
+    dataset, _ = storage
+    app = create_app()
+    client = app.test_client()
+    url = "/accueil/images/falaise.webp"
+    empty = client.get("/")
+    assert empty.status_code == 200
+    assert url not in empty.get_data(as_text=True)
+    assert client.get(url).status_code == 404
+
+    source = dataset / "sea shores" / "9_4501.jpg"
+    source.parent.mkdir(parents=True)
+    PILImage.new("RGB", (16, 12)).save(source)
+    assert url in client.get("/").get_data(as_text=True)
+    response = client.get(url)
+    assert response.status_code == 200
+    assert response.mimetype == "image/webp"
+    with PILImage.open(BytesIO(response.data)) as preview:
+        assert preview.size == (720, 420)
+    assert client.get("/accueil/images/9_4501.webp").status_code == 404
+
+    login(client, app)
+    assert client.get("/").location == "/dashboard"
 
 
 def test_import_keeps_reference_ids_on_rerun(storage, capsys):
@@ -181,6 +207,12 @@ def test_dataset_page_filters_and_serves_only_ghim_images(storage):
     assert visible_ids(first) == list(range(6, 31))
     assert "category=sea+shores&amp;page=2" in first.get_data(as_text=True)
     assert visible_ids(client.get("/dataset/", query_string={"category": "sea shores", "page": 2})) == [31]
+    ordered_ids = sorted(range(6, 32), key=lambda image_id: f"{image_id}.jpg", reverse=True)
+    order = {"category": "sea shores", "sort": "name-desc"}
+    sorted_page = client.get("/dataset/", query_string=order)
+    assert visible_ids(sorted_page) == ordered_ids[:25]
+    assert "category=sea+shores&amp;page=2&amp;sort=name-desc" in sorted_page.get_data(as_text=True)
+    assert visible_ids(client.get("/dataset/", query_string={**order, "page": 2})) == ordered_ids[25:]
     assert "Aucune image dans cette catégorie" in client.get(
         "/dataset/?category=unknown"
     ).get_data(as_text=True)

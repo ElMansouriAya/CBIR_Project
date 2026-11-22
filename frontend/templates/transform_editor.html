@@ -16,12 +16,12 @@
       {% endif %}
     </p>
   </div>
-  <a class="btn btn-light" href="{{ url_for('transform.index') }}"><i class="bi bi-arrow-left me-1"></i>Autres images</a>
+  <a class="btn btn-outline-secondary" href="{{ url_for('transform.index') }}"><i class="bi bi-arrow-left" aria-hidden="true"></i> Autres images</a>
 </div>
 
-<div class="row g-4">
+<div class="row g-3">
   <!-- Zone image -->
-  <div class="col-lg-8">
+  <div class="col-xl-8">
     <div class="card-soft">
       <div class="crop-stage">
         <img id="crop-img" src="{{ url_for('gallery.serve', image_id=img.id) }}"
@@ -31,18 +31,18 @@
   </div>
 
   <!-- Outils -->
-  <div class="col-lg-4">
+  <div class="col-xl-4">
     <div class="card-soft">
-      <ul class="nav nav-pills nav-fill mb-3" id="tools" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#t-crop" type="button" title="Recadrer"><i class="bi bi-crop"></i></button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-resize" type="button" title="Redimensionner"><i class="bi bi-arrows-angle-expand"></i></button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-rotate" type="button" title="Rotation"><i class="bi bi-arrow-clockwise"></i></button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#t-flip" type="button" title="Symétrie"><i class="bi bi-symmetry-vertical"></i></button></li>
+      <ul class="nav nav-pills tool-tabs mb-3" id="tools" role="tablist" aria-label="Outils de transformation">
+        <li class="nav-item" role="presentation"><button class="nav-link active" id="tool-crop" data-bs-toggle="pill" data-bs-target="#t-crop" type="button" role="tab" aria-controls="t-crop" aria-selected="true"><i class="bi bi-crop" aria-hidden="true"></i>Recadrer</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="tool-resize" data-bs-toggle="pill" data-bs-target="#t-resize" type="button" role="tab" aria-controls="t-resize" aria-selected="false"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>Taille</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="tool-rotate" data-bs-toggle="pill" data-bs-target="#t-rotate" type="button" role="tab" aria-controls="t-rotate" aria-selected="false"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i>Rotation</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" id="tool-flip" data-bs-toggle="pill" data-bs-target="#t-flip" type="button" role="tab" aria-controls="t-flip" aria-selected="false"><i class="bi bi-symmetry-vertical" aria-hidden="true"></i>Symétrie</button></li>
       </ul>
 
       <div class="tab-content">
         <!-- Recadrer -->
-        <div class="tab-pane fade show active" id="t-crop">
+        <div class="tab-pane fade show active" id="t-crop" role="tabpanel" aria-labelledby="tool-crop">
           <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
             <input type="hidden" name="operation" value="crop">
             <input type="hidden" name="x" id="f-x">
@@ -50,19 +50,19 @@
             <input type="hidden" name="width" id="f-w">
             <input type="hidden" name="height" id="f-h">
             <h6>Recadrer</h6>
-            <p class="text-muted small">Ajustez la zone sur l'image. Zone : <strong id="crop-info">—</strong></p>
+            <p class="text-muted small">Ajustez la zone sur l’image. <strong id="crop-info">—</strong></p>
             <div class="btn-group btn-group-sm w-100 mb-3" id="ratios">
               <button type="button" class="btn btn-outline-secondary active" data-r="NaN">Libre</button>
               <button type="button" class="btn btn-outline-secondary" data-r="1">1:1</button>
               <button type="button" class="btn btn-outline-secondary" data-r="1.3333333">4:3</button>
               <button type="button" class="btn btn-outline-secondary" data-r="1.7777778">16:9</button>
             </div>
-            <button class="btn btn-primary w-100"><i class="bi bi-scissors me-1"></i>Créer l'image recadrée</button>
+            <button class="btn btn-primary w-100" id="crop-submit" disabled><i class="bi bi-scissors me-1"></i>Créer l’image recadrée</button>
           </form>
         </div>
 
         <!-- Redimensionner -->
-        <div class="tab-pane fade" id="t-resize">
+        <div class="tab-pane fade" id="t-resize" role="tabpanel" aria-labelledby="tool-resize">
           <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
             <input type="hidden" name="operation" value="resize">
             <h6>Redimensionner</h6>
@@ -78,11 +78,11 @@
             <div id="box-px">
               <div class="row g-2 mb-2">
                 <div class="col">
-                  <label class="form-label small">Largeur</label>
+                  <label class="form-label small" for="r-w">Largeur</label>
                   <input type="number" min="1" max="8000" name="new_width" id="r-w" class="form-control" value="{{ width }}">
                 </div>
                 <div class="col">
-                  <label class="form-label small">Hauteur</label>
+                  <label class="form-label small" for="r-h">Hauteur</label>
                   <input type="number" min="1" max="8000" name="new_height" id="r-h" class="form-control" value="{{ height }}">
                 </div>
               </div>
@@ -92,7 +92,7 @@
               </div>
             </div>
             <div id="box-pc" class="mb-3 d-none">
-              <label class="form-label small">Pourcentage</label>
+              <label class="form-label small" for="r-p">Pourcentage</label>
               <input type="number" min="1" max="500" step="1" name="percent" id="r-p" class="form-control" value="50">
             </div>
             <button class="btn btn-primary w-100"><i class="bi bi-arrows-angle-contract me-1"></i>Créer l'image redimensionnée</button>
@@ -100,7 +100,7 @@
         </div>
 
         <!-- Rotation -->
-        <div class="tab-pane fade" id="t-rotate">
+        <div class="tab-pane fade" id="t-rotate" role="tabpanel" aria-labelledby="tool-rotate">
           <h6>Rotation</h6>
           <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}" class="mb-3">
             <input type="hidden" name="operation" value="rotate">
@@ -112,16 +112,16 @@
           </form>
           <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}">
             <input type="hidden" name="operation" value="rotate">
-            <label class="form-label small">Angle libre (degrés, sens horaire)</label>
+            <label class="form-label small" for="rotate-angle">Angle libre (degrés, sens horaire)</label>
             <div class="input-group">
-              <input type="number" name="angle" step="any" min="-360" max="360" class="form-control" value="15" required>
+              <input id="rotate-angle" type="number" name="angle" step="any" min="-360" max="360" class="form-control" value="15" required>
               <button class="btn btn-primary">Appliquer</button>
             </div>
           </form>
         </div>
 
         <!-- Symétrie -->
-        <div class="tab-pane fade" id="t-flip">
+        <div class="tab-pane fade" id="t-flip" role="tabpanel" aria-labelledby="tool-flip">
           <h6>Symétrie</h6>
           <form method="post" action="{{ url_for('transform.apply', image_id=img.id) }}" class="d-grid gap-2">
             <input type="hidden" name="operation" value="flip">
@@ -133,7 +133,7 @@
 
       <hr>
       <p class="small text-muted mb-0">
-        <i class="bi bi-info-circle me-1"></i>Chaque action crée une <strong>nouvelle image</strong> ; l'original n'est jamais modifié.
+        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>Chaque action enregistre une <strong>copie dans votre galerie</strong>.
       </p>
     </div>
 
@@ -160,11 +160,16 @@
   const NAT_W = parseInt(img.dataset.w, 10);
   const NAT_H = parseInt(img.dataset.h, 10);
   const info = document.getElementById("crop-info");
+  const cropSubmit = document.getElementById("crop-submit");
   let cropper = null;
 
   // --- Recadrage ---
   function initCropper() {
     if (cropper) return;
+    if (typeof Cropper === "undefined" || !img.naturalWidth) {
+      info.textContent = "Aperçu indisponible pour le recadrage.";
+      return;
+    }
     cropper = new Cropper(img, {
       viewMode: 1,
       autoCropArea: 0.8,
@@ -177,6 +182,7 @@
         document.getElementById("f-w").value = Math.round(d.width);
         document.getElementById("f-h").value = Math.round(d.height);
         info.textContent = Math.round(d.width) + " × " + Math.round(d.height) + " px";
+        cropSubmit.disabled = Math.round(d.width) < 1 || Math.round(d.height) < 1;
       }
     });
   }
@@ -185,13 +191,15 @@
     if (cropper) {
       cropper.destroy();
       cropper = null;
+      cropSubmit.disabled = true;
     }
   }
 
   if (img.complete) {
     initCropper();
   } else {
-    img.addEventListener("load", initCropper);
+    img.addEventListener("load", initCropper, { once: true });
+    img.addEventListener("error", () => { info.textContent = "Aperçu indisponible pour le recadrage."; }, { once: true });
   }
 
   // Le recadreur n'est actif que dans l'onglet « Recadrer »

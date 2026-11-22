@@ -1,30 +1,16 @@
-{% extends "base.html" %}
+{% extends "auth_layout.html" %}
+{% from "auth_fields.html" import field %}
+
 {% block title %}Inscription · VisualVault{% endblock %}
-{% block content %}
-<div class="card-soft p-4">
-  <h4 class="mb-1">Créer un compte</h4>
-  <p class="text-muted mb-4">Quelques secondes suffisent.</p>
-  <form method="post">
-    <div class="mb-3">
-      <label class="form-label">Nom d'utilisateur</label>
-      <input type="text" name="username" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Email</label>
-      <input type="email" name="email" class="form-control" required>
-    </div>
-    <div class="mb-3">
-      <label class="form-label">Mot de passe (8 caractères min.)</label>
-      <input type="password" name="password" class="form-control" minlength="8" required>
-    </div>
-    <div class="mb-4">
-      <label class="form-label">Confirmation</label>
-      <input type="password" name="confirm" class="form-control" required>
-    </div>
-    <button class="btn btn-primary w-100">S'inscrire</button>
-  </form>
-  <p class="mt-3 mb-0 text-center text-muted">
-    Déjà inscrit ? <a href="{{ url_for('auth.login') }}">Se connecter</a>
-  </p>
-</div>
+{% block back_link %}{{ home_link() }}{% endblock %}
+{% block page_modifier %} register-page{% endblock %}
+{% block heading %}Créer un compte{% endblock %}
+{% block fields %}
+  {{ field('register-username', 'username', 'Nom d’utilisateur', 'text', 'username') }}
+  {{ field('register-email', 'email', 'Adresse e-mail', 'email', 'email') }}
+  {{ field('register-password', 'password', 'Mot de passe', 'password', 'new-password',
+           minlength=8, hint='8 caractères minimum') }}
+  {{ field('register-confirm', 'confirm', 'Confirmez le mot de passe', 'password', 'new-password') }}
 {% endblock %}
+{% block submit %}Créer le compte{% endblock %}
+{% block footer %}Déjà inscrit ? <a href="{{ url_for('auth.login') }}">Se connecter</a>{% endblock %}

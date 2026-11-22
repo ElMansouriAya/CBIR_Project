@@ -1,0 +1,8 @@
+:root {
+  --vv-font: "Inter", system-ui, sans-serif;
+  --bs-body-font-family: var(--vv-font);
+}
+
+body, button, input, optgroup, option, select, textarea {
+  font-family: var(--vv-font);
+}

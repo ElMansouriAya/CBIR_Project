@@ -56,10 +56,15 @@ def index():
     else:
         current = ""
 
-    images = query.order_by(Image.created_at.desc()).all()
+    orders = {"name": Image.filename.asc(), "name-desc": Image.filename.desc()}
+    sort = request.args.get("sort", "")
+    if sort not in orders:
+        sort = ""
+    images = query.order_by(orders.get(sort, Image.created_at.desc()), Image.id.desc()).all()
     return render_template("gallery.html", images=images,
                            options=flat_categories(cats),
-                           current=current, current_cat=current_cat)
+                           category_names={cat.id: cat.name for cat in cats},
+                           current=current, current_cat=current_cat, sort=sort)
 
 
 @gallery_bp.route("/upload", methods=["POST"])

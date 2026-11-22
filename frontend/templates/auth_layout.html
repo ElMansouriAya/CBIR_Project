@@ -1,0 +1,64 @@
+{% from "site_icons.html" import icon %}
+{% macro home_link() %}
+<a class="login-back" href="{{ url_for('main.landing') }}" aria-label="Retour à l’accueil" title="Retour à l’accueil">
+  {{ icon('arrow-left') }}
+</a>
+{% endmacro %}
+<!doctype html>
+<html lang="fr" class="login-document">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <title>{% block title %}VisualVault{% endblock %}</title>
+  {% include "typography.html" %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css', v=asset_v('css/theme.css')) }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css', v=asset_v('css/login.css')) }}">
+</head>
+<body class="login-page{% block page_modifier %}{% endblock %}">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="mosaic" aria-hidden="true">
+      <div></div><div></div><div></div>
+      <div></div><div></div><div></div>
+      <div></div><div></div><div></div>
+    </div>
+    <div class="hero-copy">
+      <h2 id="hero-title">Vos images, retrouvées par leur contenu.</h2>
+      <p>Couleur, texture, similarité : affinez vos recherches et laissez VisualVault apprendre de vos choix.</p>
+    </div>
+  </section>
+
+  <main class="login-main">
+    {% block back_link %}{% endblock %}
+    <div class="login-stack">
+      <div class="login-brand">
+        <span class="brand-icon">
+          {{ icon('camera') }}
+        </span>
+        VisualVault
+      </div>
+
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+      <div class="login-flash">
+        <span role="{{ 'alert' if category == 'danger' else 'status' }}">{{ message }}</span>
+        <button class="flash-close" type="button" aria-label="Fermer le message" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      {% endfor %}
+
+      <section class="login-card" aria-labelledby="login-title">
+        <h1 id="login-title">{% block heading %}{% endblock %}</h1>
+        {% block intro %}{% endblock %}
+        <form class="login-form" method="post">
+          {% block fields %}{% endblock %}
+          <button class="login-submit" type="submit">{% block submit %}{% endblock %}</button>
+        </form>
+        <div class="login-divider" aria-hidden="true">ou</div>
+        <p class="login-footer">{% block footer %}{% endblock %}</p>
+      </section>
+    </div>
+  </main>
+
+  <script defer src="{{ url_for('static', filename='js/auth.js', v=asset_v('js/auth.js')) }}"></script>
+</body>
+</html>

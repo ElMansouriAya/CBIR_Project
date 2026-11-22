@@ -1,57 +1,80 @@
 {% extends "base.html" %}
+{% from "studio_controls.html" import photo_menu, sort_menu %}
+{% from "site_icons.html" import icon %}
 {% block title %}Ma galerie · VisualVault{% endblock %}
-{% block content %}
-<div class="page-header">
+{% block main_class %} workspace{% endblock %}
+
+{% block page_header %}
+<header class="page-header">
   <div>
     <h1 class="page-title">Ma galerie</h1>
-    <p class="page-sub">
-      {{ images|length }} image(s)
-      {% if current == 'none' %}· sans catégorie
-      {% elif current_cat %}· « {{ current_cat.name }} » (sous-catégories incluses){% endif %}
-    </p>
+    <p class="page-sub">Vos images importées</p>
   </div>
-  <form method="get" class="d-flex align-items-center gap-2">
-    <label class="text-muted small mb-0" for="filter-cat">Filtrer :</label>
-    <select name="category" id="filter-cat" class="form-select form-select-sm" onchange="this.form.submit()">
-      <option value="">Toutes les images</option>
-      <option value="none" {{ 'selected' if current == 'none' }}>Sans catégorie</option>
-      {% for c, depth in options %}
-      <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
-      {% endfor %}
-    </select>
+  <a class="btn btn-primary" href="#import-images">{{ icon('plus') }} Importer des images</a>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="workspace-tools">
+  <form id="import-images" method="post" action="{{ url_for('gallery.upload') }}" enctype="multipart/form-data" class="card-soft import-panel" aria-label="Importer des images">
+    <label class="dropzone" id="dropzone" for="file-input">
+      <span class="control-symbol">{{ icon('upload') }}</span>
+      <span>
+        <span class="dz-title">Glissez des images ici ou <span>parcourez vos fichiers</span></span>
+        <span class="dz-sub" id="dz-sub" aria-live="polite">JPG, PNG, GIF, WEBP · sélection multiple</span>
+      </span>
+      <input id="file-input" type="file" name="images" accept="image/*" multiple class="visually-hidden">
+    </label>
+    <div class="import-actions">
+      <label class="visually-hidden" for="upload-category">Catégorie d’import</label>
+      <select id="upload-category" name="category_id" class="form-select" data-menu-select="folder2">
+        <option value="">Sans catégorie</option>
+        {% for c, depth in options %}
+        <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <button class="btn btn-primary" id="upload-btn" type="submit" disabled>{{ icon('upload') }} Importer</button>
+    </div>
   </form>
+
+  <div class="filter-bar">
+    <div>
+      <h2 class="section-title" id="gallery-images-heading">Vos images</h2>
+      <p class="filter-count">
+        {{ images|length }} image{{ 's' if images|length != 1 }}
+        {% if current == 'none' %}· sans catégorie
+        {% elif current_cat %}· {{ current_cat.name }} et sous-catégories{% endif %}
+      </p>
+    </div>
+    <form method="get" class="filter-form">
+      <label for="filter-cat">Catégorie</label>
+      <select name="category" id="filter-cat" class="form-select form-select-sm" data-menu-select="folder2">
+        <option value="">Toutes les images</option>
+        <option value="none" {{ 'selected' if current == 'none' }}>Sans catégorie</option>
+        {% for c, depth in options %}
+        <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <label class="visually-hidden" for="gallery-sort">Tri</label>
+      {{ sort_menu('gallery-sort', sort, 'Les plus récentes') }}
+      <button type="submit" class="btn btn-outline-secondary">{{ icon('filter') }} Appliquer</button>
+    </form>
+  </div>
 </div>
 
-<form method="post" action="{{ url_for('gallery.upload') }}" enctype="multipart/form-data" class="card-soft mb-4">
-  <label class="dropzone" id="dropzone" for="file-input">
-    <i class="bi bi-cloud-arrow-up"></i>
-    <div class="dz-title">Glissez vos images ici ou <span>parcourez</span></div>
-    <div class="dz-sub" id="dz-sub">JPG, PNG, GIF, WEBP · sélection multiple possible</div>
-    <input id="file-input" type="file" name="images" accept="image/*" multiple hidden>
-  </label>
-  <div class="d-flex justify-content-end align-items-center gap-2 mt-3 flex-wrap">
-    <select name="category_id" class="form-select form-select-sm w-auto">
-      <option value="">Sans catégorie</option>
-      {% for c, depth in options %}
-      <option value="{{ c.id }}" {{ 'selected' if current == c.id|string }}>{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
-      {% endfor %}
-    </select>
-    <button class="btn btn-primary" id="upload-btn" disabled><i class="bi bi-upload me-1"></i>Uploader</button>
-  </div>
-</form>
-
 {% if images %}
-<form method="post">
+<form method="post" class="gallery-results">
   <input type="hidden" name="current_filter" value="{{ current }}">
   <div class="toolbar">
     <div class="form-check mb-0">
       <input class="form-check-input" type="checkbox" id="select-all">
       <label class="form-check-label" for="select-all">Tout sélectionner</label>
     </div>
-    <span class="text-muted small" id="sel-count"></span>
-    <div class="ms-auto d-flex gap-2 flex-wrap">
+    <span class="text-muted small" id="sel-count" role="status"></span>
+    <div class="selection-actions">
       <div class="input-group input-group-sm w-auto">
-        <select name="category_id" class="form-select form-select-sm">
+        <select id="move-category" name="category_id" class="form-select form-select-sm"
+                aria-label="Catégorie de destination" data-menu-select="folder2">
           <option value="none">Sans catégorie</option>
           {% for c, depth in options %}
           <option value="{{ c.id }}">{{ '\u00a0\u00a0\u00a0' * depth }}{{ '↳ ' if depth }}{{ c.name }}</option>
@@ -59,48 +82,62 @@
         </select>
         <button class="btn btn-outline-primary needs-selection" disabled
                 formaction="{{ url_for('categories.assign') }}">
-          <i class="bi bi-folder-symlink me-1"></i>Déplacer
+          <i class="bi bi-folder-symlink" aria-hidden="true"></i>Déplacer
         </button>
       </div>
       <button class="btn btn-outline-secondary btn-sm needs-selection" disabled
               formaction="{{ url_for('gallery.download_multiple') }}">
-        <i class="bi bi-file-zip me-1"></i>Télécharger (zip)
+        <i class="bi bi-file-zip" aria-hidden="true"></i>Télécharger (zip)
       </button>
       <button class="btn btn-outline-danger btn-sm needs-selection" disabled
               formaction="{{ url_for('gallery.delete') }}"
               onclick="return confirm('Supprimer les images sélectionnées ?')">
-        <i class="bi bi-trash me-1"></i>Supprimer
+        <i class="bi bi-trash" aria-hidden="true"></i>Supprimer
       </button>
     </div>
   </div>
 
-  <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
-    {% for img in images %}
-    <div class="col">
-      <div class="tile">
-        <input class="tile-check" type="checkbox" name="selected" value="{{ img.id }}">
-        <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
-        <div class="tile-overlay">
-          <span class="tile-name" title="{{ img.filename }}">{{ img.filename }}</span>
-          <span class="d-flex gap-2">
-            <a href="{{ url_for('transform.editor', image_id=img.id) }}" title="Transformer">
-              <i class="bi bi-crop"></i>
-            </a>
-            <a href="{{ url_for('gallery.download', image_id=img.id) }}" title="Télécharger">
-              <i class="bi bi-download"></i>
-            </a>
-          </span>
+  <section class="collection-scroll photo-scroll" aria-labelledby="gallery-images-heading" tabindex="0">
+    <div class="image-grid photo-grid">
+      {% for img in images %}
+      <article class="image-card">
+        <div class="image-frame">
+          <a href="{{ url_for('gallery.serve', image_id=img.id) }}" class="tile">
+            <img src="{{ url_for('gallery.serve', image_id=img.id) }}" alt="{{ img.filename }}" loading="lazy">
+          </a>
+          <label class="image-picker">
+            <input class="form-check-input tile-check" type="checkbox" name="selected" value="{{ img.id }}"
+                   aria-label="Sélectionner {{ img.filename }}">
+          </label>
         </div>
-      </div>
+        <div class="image-card-body">
+          <h3 class="image-name" title="{{ img.filename }}">{{ img.filename }}</h3>
+          <span class="category-tag">{{ category_names.get(img.category_id, 'Sans catégorie') }}</span>
+          <div class="image-actions">
+            <a class="btn btn-outline-secondary photo-action" href="{{ url_for('transform.editor', image_id=img.id) }}">
+              {{ icon('crop') }} Transformer
+            </a>
+            {{ photo_menu(img.filename, [
+              ('download', 'Télécharger', url_for('gallery.download', image_id=img.id)),
+              ('arrows-angle-expand', 'Ouvrir l’image', url_for('gallery.serve', image_id=img.id))
+            ]) }}
+          </div>
+        </div>
+      </article>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
+  </section>
 </form>
 {% else %}
 <div class="card-soft empty-state">
-  <i class="bi bi-images"></i>
-  <h5>Aucune image ici</h5>
-  <p class="mb-0">Ajoutez des images avec la zone ci-dessus.</p>
+  <span class="empty-icon">{{ icon('image') }}</span>
+  {% if current %}
+    <h2>Aucune image dans cette catégorie</h2>
+    <a class="btn btn-outline-secondary" href="{{ url_for('gallery.index') }}">Afficher toutes les images</a>
+  {% else %}
+    <h2>Votre galerie est vide</h2>
+    <p>Importez vos premières images dans la zone ci-dessus.</p>
+  {% endif %}
 </div>
 {% endif %}
 {% endblock %}
@@ -140,18 +177,20 @@
 
     function refresh() {
       const n = checks.filter(function (c) { return c.checked; }).length;
-      count.textContent = n ? n + " sélectionnée(s)" : "";
+      count.textContent = n ? n + (n === 1 ? " image sélectionnée" : " images sélectionnées") : "";
       actions.forEach(function (b) { b.disabled = !n; });
       checks.forEach(function (c) {
-        c.closest(".tile").classList.toggle("selected", c.checked);
+        c.closest(".image-card").classList.toggle("selected", c.checked);
       });
       all.checked = n > 0 && n === checks.length;
+      all.indeterminate = n > 0 && n < checks.length;
     }
     checks.forEach(function (c) { c.addEventListener("change", refresh); });
     all.addEventListener("change", function () {
       checks.forEach(function (c) { c.checked = all.checked; });
       refresh();
     });
+    refresh();
   }
 </script>
 {% endblock %}
